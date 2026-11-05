@@ -1,0 +1,97 @@
+name: Solar dashboard
+
+on:
+  schedule:
+    # Times are in UTC (IST = UTC + 5:30). Add, remove or change lines as you like.
+    - cron: "30 2 * * *"      # 02:30 UTC =  8:00 AM IST — morning start + resident update
+    - cron: "30 8 * * *"      # 08:30 UTC =  2:00 PM IST — today so far
+    - cron: "30 14 * * *"     # 14:30 UTC =  8:00 PM IST — full day + health check
+  workflow_dispatch:           # adds a "Run workflow" button for manual runs
+
+permissions:
+  contents: write              # lets the job commit the dashboard
+
+concurrency:
+  group: solar-dashboard
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      # History is kept in the Actions cache, NOT committed to this public repo.
+      # If the cache is ever cleared, the script simply re-downloads history from Deye.
+      - name: Restore private history
+        uses: actions/cache/restore@v4
+        with:
+          path: data
+          key: solar-data-${{ github.run_id }}
+          restore-keys: solar-data-
+
+      - name: Fetch data and build dashboard
+        env:
+          # Secrets (Settings → Secrets and variables → Actions → Secrets)
+          APP_ID: ${{ secrets.DEYE_APP_ID }}
+          APP_SECRET: ${{ secrets.DEYE_APP_SECRET }}
+          EMAIL: ${{ secrets.DEYE_EMAIL }}
+          MOBILE: ${{ secrets.DEYE_MOBILE }}
+          PASSWORD: ${{ secrets.DEYE_PASSWORD }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          FAST2SMS_API_KEY: ${{ secrets.FAST2SMS_API_KEY }}
+          FAST2SMS_NUMBERS: ${{ secrets.FAST2SMS_NUMBERS }}
+          # Optional plain settings (Settings → Secrets and variables → Actions → Variables)
+          BASE_URL: ${{ vars.BASE_URL }}
+          DISPLAY_NAME: ${{ vars.DISPLAY_NAME }}
+          THEME: ${{ vars.THEME }}
+          STRING_PANELS: ${{ vars.STRING_PANELS }}
+          PARALLEL_STRINGS: ${{ vars.PARALLEL_STRINGS }}
+          PANEL_WATTS: ${{ vars.PANEL_WATTS }}
+          PANEL_VOLTS_HOT: ${{ vars.PANEL_VOLTS_HOT }}
+          # Public-repo safety
+          MASK_IDS: "1"                # hide plant name / IDs in these public logs
+          HISTORY_CSV: data/solar_history.csv
+          STRINGS_JSON: data/strings_history.json
+          ALERT_STATE: data/alert_state.json
+          OUTPUT_HTML: docs/index.html
+          RUN_TIMES: "08:00,14:00,20:00"   # keep in step with the cron lines above (IST)
+          # Morning update for residents (sent once, by the 8 AM run)
+          COMMUNITY_NAME: ${{ vars.COMMUNITY_NAME }}
+          DASHBOARD_URL: ${{ vars.DASHBOARD_URL }}
+          RESIDENT_TELEGRAM_CHAT: ${{ vars.RESIDENT_TELEGRAM_CHAT }}
+          WEATHER_PLACE: ${{ vars.WEATHER_PLACE }}
+          LATITUDE: ${{ vars.LATITUDE }}
+          LONGITUDE: ${{ vars.LONGITUDE }}
+          FORECAST_JSON: data/forecast_log.json
+          UPDATE_TXT: data/resident_update.txt
+          ALERTS_JSON: data/inverter_alerts.json
+        run: python solar_chart.py --no-open
+
+      - name: Save private history
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: data
+          key: solar-data-${{ github.run_id }}
+
+      - name: Publish dashboard
+        run: |
+          git config user.name  "solar-bot"
+          git config user.email "solar-bot@users.noreply.github.com"
+          git add docs/index.html
+          if git diff --cached --quiet; then
+            echo "Nothing changed."
+          else
+            git commit -m "Dashboard update $(TZ=Asia/Kolkata date '+%d %b %Y %H:%M IST')"
+            git push
+          fi
