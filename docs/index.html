@@ -1,0 +1,551 @@
+<!doctype html>
+<html lang="en" data-palette="clean">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sumukha Opal Solar </title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{--good:#0ca30c; --warning:#fab219; --critical:#d03b3b}
+:root[data-palette="clean"]{--bg:#f5f7fa; --card:#ffffff; --ink:#14181f; --muted:#5b6472; --line:#e3e7ee; --sun:#2a78d6; --sun-soft:#dbe8fa; --on-accent:#ffffff; --shadow:0 1px 3px rgba(16,24,40,.06),0 1px 2px rgba(16,24,40,.04); --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#6250d6;}
+:root[data-palette="clean"][data-theme="dark"]{--bg:#0e1116; --card:#171b22; --ink:#eef1f5; --muted:#9aa3b2; --line:#262c36; --sun:#3987e5; --sun-soft:#183457; --on-accent:#ffffff; --shadow:none; --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#9085e9;}
+:root[data-palette="leaf"]{--bg:#f3f7f2; --card:#ffffff; --ink:#17231b; --muted:#566659; --line:#dde7da; --sun:#1f8a57; --sun-soft:#d3ebdb; --on-accent:#ffffff; --shadow:0 1px 3px rgba(16,24,40,.06),0 1px 2px rgba(16,24,40,.04); --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#6250d6;}
+:root[data-palette="leaf"][data-theme="dark"]{--bg:#0f1611; --card:#18211a; --ink:#ecf3ed; --muted:#9db0a2; --line:#26332a; --sun:#3fb37a; --sun-soft:#173a26; --on-accent:#06210f; --shadow:none; --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#9085e9;}
+:root[data-palette="night"]{--bg:#0b1220; --card:#121a2b; --ink:#e8edf6; --muted:#93a0b8; --line:#1f2a40; --sun:#22c3a6; --sun-soft:#0f3a3a; --on-accent:#062420; --shadow:none; --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#9085e9;}
+:root[data-palette="night"][data-theme="dark"]{--bg:#0b1220; --card:#121a2b; --ink:#e8edf6; --muted:#93a0b8; --line:#1f2a40; --sun:#22c3a6; --sun-soft:#0f3a3a; --on-accent:#062420; --shadow:none; --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#9085e9;}
+:root[data-palette="sunny"]{--bg:#fffaf0; --card:#ffffff; --ink:#2b2a28; --muted:#6f6a61; --line:#efe7d8; --sun:#f6a609; --sun-soft:#fde7b4; --on-accent:#2b2000; --shadow:0 1px 3px rgba(16,24,40,.06),0 1px 2px rgba(16,24,40,.04); --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#6250d6;}
+:root[data-palette="sunny"][data-theme="dark"]{--bg:#17150f; --card:#221f17; --ink:#f3eee3; --muted:#a39d90; --line:#332e22; --sun:#ffb72b; --sun-soft:#4a3a12; --on-accent:#2b2000; --shadow:none; --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#9085e9;}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Nunito,system-ui,sans-serif}
+.wrap{max-width:980px;margin:0 auto;padding:20px 16px 40px}
+header{display:flex;align-items:center;gap:14px;margin-bottom:18px}
+.sunicon{width:48px;height:48px;flex:none}
+h1{font-size:1.45rem;margin:0;font-weight:800}
+h2{font-size:1.05rem;margin:0 0 10px;font-weight:800}
+.sub{color:var(--muted);font-size:.9rem}
+.nextrun{font-size:.82rem;margin-top:2px}
+.themepick{margin-left:auto;display:flex;align-items:center;gap:6px;color:var(--muted);font-size:.85rem;font-weight:700}
+.themepick select{font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:999px;padding:5px 10px}
+.hero{background:linear-gradient(135deg,var(--sun-soft),transparent 70%),var(--card);
+  border-radius:20px;padding:22px;box-shadow:var(--shadow);border:1px solid var(--line);margin-bottom:14px}
+.hero .label{color:var(--muted);font-weight:700}
+.hero .big{font-size:3.2rem;font-weight:800;line-height:1.05;margin:4px 0}
+.hero .big small{font-size:1.1rem;color:var(--muted);font-weight:700}
+.hero .note{font-size:.95rem}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 16px;box-shadow:var(--shadow)}
+.card .k{color:var(--muted);font-size:.85rem;font-weight:700}
+.card .v{font-size:1.6rem;font-weight:800;margin-top:2px}
+.card .v small{font-size:.85rem;color:var(--muted)}
+.health{border-left:6px solid var(--line);margin-bottom:14px}
+.health.good{border-left-color:var(--good)} .health.warning{border-left-color:var(--warning)} .health.critical{border-left-color:var(--critical)}
+.hhead{display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap}
+.tablewrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.grid > *, .facts > *, .rangesum > div{min-width:0}
+@media (max-width: 640px){
+  .wrap{padding:14px 12px 32px}
+  header{flex-wrap:wrap;gap:10px}
+  header > div{flex:1 1 0;min-width:0}
+  h1{font-size:1.2rem;line-height:1.25;overflow-wrap:anywhere}
+  .sunicon{width:36px;height:36px}
+  .themepick{margin-left:0;flex-basis:100%}
+  .hero{padding:18px}
+  .hero .big{font-size:2.6rem}
+  .card .v{font-size:1.35rem}
+  .chartbox{height:260px}
+  /* tables become stacked cards: one block per row, labels above values */
+  table.stack thead{display:none}
+  table.stack, table.stack tbody, table.stack tr{display:block;width:100%}
+  table.stack tr{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;padding:10px 0;border-bottom:1px solid var(--line)}
+  table.stack td{border:0;padding:0;text-align:left}
+  table.stack td::before{content:attr(data-label);display:block;color:var(--muted);font-size:.75rem;font-weight:700}
+  table.stack td:first-child{grid-column:1 / -1;font-weight:800;font-size:1rem}
+  table.stack td:first-child::before{content:none}
+}
+.badge{flex:none;display:inline-flex;align-items:center;gap:6px;font-weight:800;font-size:.8rem;padding:3px 10px;border-radius:999px;border:1px solid var(--line)}
+.badge i{width:10px;height:10px;border-radius:50%;display:inline-block}
+.issue{margin-top:12px;padding-top:12px;border-top:1px dashed var(--line)}
+.issue b{display:block}
+.issue p{margin:4px 0 0;color:var(--muted)}
+table{width:100%;border-collapse:collapse;margin-top:12px;font-size:.9rem}
+th,td{text-align:right;padding:6px 8px;border-bottom:1px solid var(--line)}
+th:first-child,td:first-child{text-align:left}
+th{color:var(--muted);font-weight:700}
+.sw{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:16px;box-shadow:var(--shadow)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.tabs button{font:inherit;font-weight:700;border:1px solid var(--line);background:transparent;color:var(--ink);
+  padding:7px 14px;border-radius:999px;cursor:pointer}
+.tabs button.on{background:var(--sun);border-color:var(--sun);color:var(--on-accent)}
+.subtabs{display:none;gap:6px;margin:-2px 0 10px}
+.subtabs.show{display:flex;flex-wrap:wrap}
+.subtabs button{font:inherit;font-size:.85rem;font-weight:700;border:0;background:transparent;color:var(--muted);padding:4px 8px;cursor:pointer;border-bottom:2px solid transparent}
+.subtabs button.on{color:var(--ink);border-bottom-color:var(--sun)}
+.rangebar,.rangesum{display:none}
+.rangebar.show{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;margin:-2px 0 10px;font-size:.88rem;font-weight:700;color:var(--muted)}
+.datebox{position:relative;display:inline-flex;align-items:center;gap:6px;color:var(--ink);background:var(--card);
+  border:1px solid var(--line);border-radius:10px;padding:5px 10px;cursor:pointer;font-variant-numeric:tabular-nums}
+.datebox::after{content:"📅";font-size:.85rem}
+.datebox:focus-within{border-color:var(--sun)}
+/* the real date input sits invisibly on top so tapping opens the phone's calendar */
+.datebox input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;border:0;padding:0;color-scheme:light}
+:root[data-palette="night"] .datebox input{color-scheme:dark}
+.presets{display:flex;flex-wrap:wrap;gap:6px}
+.presets button{font:inherit;font-size:.82rem;font-weight:700;color:var(--ink);background:transparent;border:1px solid var(--line);border-radius:999px;padding:4px 10px;cursor:pointer}
+.presets button:hover{border-color:var(--sun)}
+.rangesum.show{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-bottom:12px}
+.rangesum > div{border:1px solid var(--line);border-radius:12px;padding:8px 12px}
+.rangesum .k{color:var(--muted);font-size:.8rem;font-weight:700}
+.rangesum .v{font-size:1.25rem;font-weight:800}
+.chartbox{position:relative;height:320px}
+.caption{color:var(--muted);font-size:.9rem;margin-top:8px;min-height:1.2em}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:14px}
+.fact{display:flex;gap:10px;align-items:flex-start}
+.fact .e{font-size:1.4rem;line-height:1}
+.alertsbox{margin-bottom:14px}
+.alertsbox h2{margin-bottom:4px}
+.alist{list-style:none;margin:10px 0 0;padding:0}
+.alist li{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-top:1px solid var(--line)}
+.alist li .sw{margin-top:6px;flex:none}
+.alist li.on b{color:var(--ink)}
+.alist details{margin-top:4px;font-size:.88rem}
+.alist summary{cursor:pointer;color:var(--muted);font-weight:700}
+.alist details p{margin:4px 0;color:var(--ink)}
+.update{margin-top:14px}
+.update pre{white-space:pre-wrap;font:inherit;line-height:1.5;margin:8px 0 12px;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.ubtns{display:flex;flex-wrap:wrap;gap:8px}
+.ubtn{font:inherit;font-weight:800;font-size:.9rem;padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer;text-decoration:none}
+.ubtn.wa{background:#1fa855;border-color:#1fa855;color:#fff}
+footer{color:var(--muted);font-size:.8rem;margin-top:18px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <svg class="sunicon" viewBox="0 0 48 48" aria-hidden="true"><g fill="none" stroke="#f6a609" stroke-width="3" stroke-linecap="round">
+      <circle cx="24" cy="24" r="9" fill="#f6a609"/><path d="M24 4v6M24 38v6M4 24h6M38 24h6M9.9 9.9l4.2 4.2M33.9 33.9l4.2 4.2M9.9 38.1l4.2-4.2M33.9 14.1l4.2-4.2"/></g></svg>
+    <div><h1 id="name">My Solar</h1><div class="sub" id="updated"></div></div>
+    <label class="themepick">Theme <select id="themeSel"><option value="clean">Clean</option><option value="leaf">Leaf</option><option value="night">Night</option><option value="sunny">Sunny</option></select></label>
+  </header>
+
+  <section class="hero">
+    <div class="label">Today so far</div>
+    <div class="big" id="today">0 <small>units</small></div>
+    <div class="note" id="todayNote"></div>
+  </section>
+
+  <section class="card health" id="health" hidden></section>
+
+  <section class="card alertsbox" id="alertsCard" hidden></section>
+
+  <section class="grid">
+    <div class="card"><div class="k">This month</div><div class="v" id="month">–</div></div>
+    <div class="card"><div class="k">This year</div><div class="v" id="year">–</div></div>
+    <div class="card"><div class="k">All time</div><div class="v" id="all">–</div></div>
+  </section>
+
+  <section class="panel">
+    <div class="tabs" role="tablist">
+      <button data-v="today" class="on">Today</button>
+      <button data-v="days">Last 30 days</button>
+      <button data-v="weeks">By week</button>
+      <button data-v="months">By month</button>
+      <button data-v="years">By year</button>
+      <button data-v="strings" id="stringsTab" hidden>By string</button>
+      <button data-v="range">Date range</button>
+    </div>
+    <div class="rangebar" id="rangebar">
+      <label>From <span class="datebox"><span class="dtext" id="rFromText">dd/mm/yyyy</span><input type="date" id="rFrom" aria-label="From date"></span></label>
+      <label>To <span class="datebox"><span class="dtext" id="rToText">dd/mm/yyyy</span><input type="date" id="rTo" aria-label="To date"></span></label>
+      <span class="presets">
+        <button data-p="7">Last 7 days</button><button data-p="month">This month</button>
+        <button data-p="lastmonth">Last month</button><button data-p="year">This year</button><button data-p="all">All</button>
+      </span>
+    </div>
+    <div class="rangesum" id="rangesum"></div>
+    <div class="subtabs" id="subtabs">
+      <button data-s="sToday" class="on">Today's power</button>
+      <button data-s="sShare">Share of output</button>
+      <button data-s="sVolt">Midday voltage</button>
+      <button data-s="sBranch" id="branchTab" hidden>Each string's current</button>
+    </div>
+    <div class="chartbox"><canvas id="chart" role="img" aria-label="Solar chart"></canvas></div>
+    <div class="caption" id="caption"></div>
+  </section>
+
+  <section class="facts" id="facts"></section>
+
+  <section class="card update" id="update" hidden>
+    <div class="k">Morning update for residents</div>
+    <pre id="updateText"></pre>
+    <div class="ubtns">
+      <a class="ubtn wa" id="waShare" target="_blank" rel="noopener">Share on WhatsApp</a>
+      <button class="ubtn" id="copyUpdate" type="button">Copy text</button>
+    </div>
+  </section>
+  <footer>1 unit = 1 kWh, the same “unit” on your electricity bill · Data from Deye Cloud</footer>
+</div>
+
+<script>
+const D = {"alerts": {"items": [{"id": "179385593216978911600", "code": "9", "name": "AC_WU_U nderVolt_Fault F42", "level": "warning", "start": "2026-11-05 10:48", "end": "2026-11-05 10:51", "ongoing": false, "device": "Inverter \u2026E4E6", "reason": "", "solution": ""}, {"id": "179383930516978911600", "code": "9", "name": "AC_WU_U nderVolt_Fault F42", "level": "warning", "start": "2026-11-05 06:11", "end": "2026-11-05 06:17", "ongoing": false, "device": "Inverter \u2026E4E6", "reason": "", "solution": ""}, {"id": "179353591916978911582", "code": "7", "name": "DC_VoltLo w_Fault F56", "level": "warning", "start": "2026-11-01 17:55", "end": "2026-11-02 06:05", "ongoing": false, "device": "Inverter \u2026E4E6", "reason": "", "solution": ""}, {"id": "179316042416978911582", "code": "7", "name": "DC_VoltLo w_Fault F56", "level": "warning", "start": "2026-10-28 09:37", "end": "2026-10-28 09:38", "ongoing": false, "device": "Inverter \u2026E4E6", "reason": "", "solution": ""}, {"id": "179289156216978911616", "code": "9", "name": "BusUnbalance_Fault   F26", "level": "warning", "start": "2026-10-25 06:56", "end": "2026-10-25 06:58", "ongoing": false, "device": "Inverter \u2026E4E6", "reason": "", "solution": ""}, {"id": "179229485516978911582", "code": "7", "name": "DC_VoltLo w_Fault F56", "level": "warning", "start": "2026-10-18 09:10", "end": "2026-10-18 09:17", "ongoing": false, "device": "Inverter \u2026E4E6", "reason": "", "solution": ""}, {"id": "179206633116978911593", "code": "2", "name": "AC_NoUtillity_Fault  F35", "level": "warning", "start": "2026-10-15 17:42", "end": "2026-10-16 06:02", "ongoing": false, "device": "Inverter \u2026E4E6", "reason": "", "solution": ""}, {"id": "179206483016978911616", "code": "9", "name": "BusUnbalance_Fault   F26", "level": "warning", "start": "2026-10-15 17:17", "end": "2026-10-15 17:41", "ongoing": false, "device": "Inverter \u2026E4E6", "reason": "", "solution": ""}, {"id": "179206290916978911616", "code": "9", "name": "BusUnbalance_Fault   F26", "level": "warning", "start": "2026-10-15 16:45", "end": "2026-10-15 16:48", "ongoing": false, "device": "Inverter \u2026E4E6", "reason": "", "solution": ""}, {"id": "179204243816978911616", "code": "9", "name": "BusUnbalance_Fault   F26", "level": "warning", "start": "2026-10-15 11:03", "end": "2026-10-15 11:05", "ongoing": false, "device": "Inverter \u2026E4E6", "reason": "", "solution": ""}, {"id": "179203985616978911616", "code": "9", "name": "BusUnbalance_Fault   F26", "level": "warning", "start": "2026-10-15 10:20", "end": "2026-10-15 10:22", "ongoing": false, "device": "Inverter \u2026E4E6", "reason": "", "solution": ""}, {"id": "179203661416978911600", "code": "9", "name": "AC_WU_U nderVolt_Fault F42", "level": "warning", "start": "2026-10-15 09:26", "end": "2026-10-15 09:28", "ongoing": false, "device": "Inverter \u2026E4E6", "reason": "", "solution": ""}, {"id": "179197822816978911600", "code": "9", "name": "AC_WU_U nderVolt_Fault F42", "level": "warning", "start": "2026-10-14 17:13", "end": "2026-10-14 17:15", "ongoing": false, "device": "Inverter \u2026E4E6", "reason": "", "solution": ""}, {"id": "179196039416978911616", "code": "9", "name": "BusUnbalance_Fault   F26", "level": "warning", "start": "2026-10-14 12:16", "end": "2026-10-14 12:18", "ongoing": false, "device": "Inverter \u2026E4E6", "reason": "", "solution": ""}, {"id": "179179525716978911600", "code": "9", "name": "AC_WU_U nderVolt_Fault F42", "level": "warning", "start": "2026-10-12 14:24", "end": "2026-10-12 14:27", "ongoing": false, "device": "Inverter \u2026E4E6", "reason": "", "solution": ""}, {"id": "179159971916978911593", "code": "2", "name": "AC_NoUtillity_Fault  F35", "level": "warning", "start": "2026-10-10 08:05", "end": "2026-10-10 09:12", "ongoing": false, "device": "Inverter \u2026E4E6", "reason": "", "solution": ""}, {"id": "179159815716978911616", "code": "9", "name": "BusUnbalance_Fault   F26", "level": "warning", "start": "2026-10-10 07:39", "end": "2026-10-10 08:05", "ongoing": false, "device": "Inverter \u2026E4E6", "reason": "", "solution": ""}, {"id": "179152407316978911616", "code": "9", "name": "BusUnbalance_Fault   F26", "level": "warning", "start": "2026-10-09 11:04", "end": "2026-10-09 11:07", "ongoing": false, "device": "Inverter \u2026E4E6", "reason": "", "solution": ""}, {"id": "179144787616978911616", "code": "9", "name": "BusUnbalance_Fault   F26", "level": "warning", "start": "2026-10-08 13:54", "end": "2026-10-08 13:56", "ongoing": false, "device": "Inverter \u2026E4E6", "reason": "", "solution": ""}, {"id": "179143934916978911616", "code": "9", "name": "BusUnbalance_Fault   F26", "level": "warning", "start": "2026-10-08 11:32", "end": "2026-10-08 11:35", "ongoing": false, "device": "Inverter \u2026E4E6", "reason": "", "solution": ""}], "available": true}, "name": "Sumukha Opal Solar ", "capacity": 37.2, "daily": [["2026-09-15", 0.5], ["2026-09-16", 95.0], ["2026-09-17", 211.4], ["2026-09-18", 212.7], ["2026-09-19", 189.2], ["2026-09-20", 127.3], ["2026-09-21", 184.6], ["2026-09-22", 104.4], ["2026-09-23", 99.1], ["2026-09-24", 155.6], ["2026-09-25", 134.7], ["2026-09-26", 217.2], ["2026-09-27", 178.8], ["2026-09-28", 198.5], ["2026-09-29", 181.6], ["2026-09-30", 204.0], ["2026-10-01", 181.6], ["2026-10-02", 223.7], ["2026-10-03", 216.5], ["2026-10-04", 188.3], ["2026-10-05", 140.8], ["2026-10-06", 214.4], ["2026-10-07", 187.1], ["2026-10-08", 211.3], ["2026-10-09", 154.6], ["2026-10-10", 200.1], ["2026-10-11", 230.2], ["2026-10-12", 195.5], ["2026-10-13", 226.6], ["2026-10-14", 196.4], ["2026-10-15", 169.2], ["2026-10-16", 95.2], ["2026-10-17", 194.2], ["2026-10-18", 92.6], ["2026-10-19", 204.4], ["2026-10-20", 203.3], ["2026-10-21", 141.7], ["2026-10-22", 73.0], ["2026-10-23", 90.6], ["2026-10-24", 80.4], ["2026-10-25", 91.3], ["2026-10-26", 150.3], ["2026-10-27", 174.9], ["2026-10-28", 172.6], ["2026-10-29", 177.2], ["2026-10-30", 159.8], ["2026-10-31", 150.5], ["2026-11-01", 158.2], ["2026-11-02", 115.6], ["2026-11-03", 113.1], ["2026-11-04", 63.7], ["2026-11-05", 131.6]], "curve": [["06:00", 0.0], ["06:05", 0.0], ["06:10", 0.0], ["06:15", 0.01], ["06:20", 0.07], ["06:25", 0.14], ["06:30", 0.15], ["06:35", 0.49], ["06:40", 0.95], ["06:45", 1.06], ["06:50", 1.75], ["06:55", 2.06], ["07:00", 2.18], ["07:05", 2.74], ["07:10", 2.97], ["07:15", 3.32], ["07:20", 4.04], ["07:25", 4.43], ["07:30", 0.0], ["07:35", 6.01], ["07:40", 6.38], ["07:45", 8.07], ["07:50", 8.59], ["07:55", 4.67], ["08:00", 5.53], ["08:05", 5.08], ["08:10", 4.51], ["08:15", 7.61], ["08:20", 6.26], ["08:25", 7.04], ["08:30", 6.08], ["08:35", 4.5], ["08:40", 5.83], ["08:45", 7.26], ["08:50", 5.59], ["08:55", 5.27], ["09:00", 8.01], ["09:05", 8.54], ["09:10", 12.46], ["09:15", 10.3], ["09:20", 9.03], ["09:25", 11.4], ["09:30", 10.28], ["09:35", 12.98], ["09:40", 12.37], ["09:45", 22.2], ["09:50", 8.92], ["09:55", 8.7], ["10:00", 8.65], ["10:05", 18.61], ["10:10", 14.12], ["10:15", 11.56], ["10:20", 15.95], ["10:25", 18.6], ["10:30", 18.31], ["10:35", 25.48], ["10:40", 11.51], ["10:45", 13.25], ["10:50", 8.74], ["10:55", 25.61], ["11:00", 14.92], ["11:05", 7.4], ["11:10", 23.42], ["11:15", 8.55], ["11:20", 26.82], ["11:25", 11.74], ["11:30", 16.37], ["11:35", 10.58], ["11:40", 18.44], ["11:45", 21.09], ["11:50", 13.34], ["11:55", 26.66], ["12:00", 15.27], ["12:05", 26.27], ["12:10", 26.47], ["12:15", 16.77], ["12:20", 26.71], ["12:25", 27.69], ["12:30", 11.52], ["12:35", 9.96], ["12:40", 25.7], ["12:45", 24.31], ["12:50", 24.71], ["12:55", 24.02], ["13:00", 24.2], ["13:05", 22.24], ["13:10", 23.95], ["13:15", 8.5], ["13:20", 10.86], ["13:25", 19.94], ["13:30", 10.68], ["13:35", 23.15], ["13:40", 24.03], ["13:45", 25.15], ["13:50", 9.61], ["13:55", 23.7], ["14:00", 23.6], ["14:05", 24.15], ["14:10", 22.99], ["14:15", 11.65], ["14:20", 12.38], ["14:25", 20.79], ["14:30", 19.83], ["14:35", 19.76], ["14:40", 19.2], ["14:45", 12.76], ["14:50", 19.53], ["14:55", 7.55], ["15:00", 16.62], ["15:05", 9.66], ["15:10", 11.04], ["15:15", 15.11], ["15:20", 15.72], ["15:25", 15.88], ["15:30", 5.68], ["15:35", 5.7], ["15:40", 5.87], ["15:45", 9.62], ["15:50", 5.91], ["15:55", 9.92], ["16:00", 9.55], ["16:05", 7.08], ["16:10", 4.04], ["16:15", 6.73], ["16:20", 6.05], ["16:25", 5.52], ["16:30", 4.04], ["16:35", 4.39], ["16:40", 3.37], ["16:45", 2.28], ["16:50", 1.95], ["16:55", 1.53], ["17:00", 1.18], ["17:05", 1.14], ["17:10", 1.01], ["17:15", 0.85], ["17:20", 0.74], ["17:25", 0.57], ["17:30", 0.37], ["17:35", 0.32], ["17:40", 0.18], ["17:45", 0.04], ["17:50", 0.01], ["17:55", 0.0], ["18:00", 0.0], ["18:05", 0.0], ["18:10", 0.0], ["18:15", 0.0], ["18:20", 0.0], ["18:25", 0.0], ["18:30", 0.0], ["18:35", 0.0], ["18:40", 0.0], ["18:45", 0.0], ["18:50", 0.0], ["18:55", 0.0], ["19:00", 0.0], ["19:05", 0.0], ["19:10", 0.0], ["19:15", 0.0], ["19:20", 0.0], ["19:25", 0.0], ["19:30", 0.0], ["19:35", 0.0], ["19:40", 0.0], ["19:45", 0.0], ["19:50", 0.0], ["19:55", 0.0], ["20:00", 0.0], ["20:05", 0.0], ["20:10", 0.0], ["20:15", 0.0]], "strings": {"names": ["PV1", "PV2"], "today": {"labels": ["06:04", "06:05", "06:08", "06:11", "06:14", "06:17", "06:20", "06:23", "06:26", "06:27", "06:28", "06:29", "06:32", "06:35", "06:38", "06:41", "06:44", "06:47", "06:50", "06:53", "06:56", "06:59", "07:02", "07:03", "07:06", "07:09", "07:12", "07:15", "07:18", "07:21", "07:24", "07:27", "07:30", "07:33", "07:36", "07:39", "07:42", "07:45", "07:48", "07:49", "07:52", "07:55", "07:58", "08:01", "08:04", "08:07", "08:10", "08:13", "08:16", "08:19", "08:22", "08:25", "08:28", "08:29", "08:32", "08:35", "08:36", "08:39", "08:42", "08:45", "08:48", "08:51", "08:54", "08:57", "09:00", "09:03", "09:06", "09:09", "09:12", "09:13", "09:14", "09:15", "09:18", "09:19", "09:20", "09:23", "09:26", "09:29", "09:30", "09:33", "09:36", "09:39", "09:42", "09:45", "09:48", "09:49", "09:50", "09:51", "09:52", "09:53", "09:54", "09:55", "09:56", "09:57", "10:00", "10:01", "10:02", "10:03", "10:06", "10:09", "10:12", "10:15", "10:18", "10:21", "10:24", "10:27", "10:30", "10:31", "10:32", "10:33", "10:36", "10:37", "10:38", "10:41", "10:42", "10:45", "10:48", "10:51", "10:54", "10:57", "11:00", "11:03", "11:06", "11:09", "11:12", "11:15", "11:18", "11:21", "11:24", "11:27", "11:30", "11:33", "11:36", "11:39", "11:42", "11:45", "11:48", "11:51", "11:54", "11:57", "12:00", "12:03", "12:06", "12:09", "12:12", "12:15", "12:18", "12:21", "12:24", "12:27", "12:30", "12:33", "12:36", "12:39", "12:42", "12:43", "12:46", "12:49", "12:52", "12:55", "12:58", "13:01", "13:04", "13:07", "13:10", "13:13", "13:16", "13:19", "13:22", "13:25", "13:26", "13:29", "13:32", "13:35", "13:38", "13:41", "13:44", "13:47", "13:50", "13:53", "13:56", "13:59", "14:02", "14:05", "14:08", "14:11", "14:14", "14:17", "14:20", "14:23", "14:26", "14:29", "14:32", "14:35", "14:38", "14:41", "14:44", "14:45", "14:48", "14:51", "14:54", "14:57", "15:00", "15:03", "15:06", "15:09", "15:13", "15:16", "15:19", "15:22", "15:25", "15:28", "15:31", "15:34", "15:37", "15:40", "15:43", "15:46", "15:49", "15:52", "15:55", "15:58", "16:01", "16:04", "16:07", "16:10", "16:13", "16:16", "16:19", "16:22", "16:25", "16:28", "16:31", "16:34", "16:37", "16:40", "16:43", "16:46", "16:49", "16:52", "16:55", "16:58", "17:01", "17:04", "17:07", "17:10", "17:13", "17:16", "17:19", "17:22", "17:25", "17:28", "17:31", "17:34", "17:37", "17:40", "17:43", "17:46", "17:49", "17:52", "17:55", "17:58", "18:01", "18:04", "18:07", "18:10", "18:13", "18:16", "18:19", "18:22", "18:25", "18:28", "18:31", "18:34", "18:37", "18:40", "18:43", "18:46", "18:49", "18:52", "18:55", "18:58", "19:01", "19:04", "19:07", "19:10", "19:13", "19:16", "19:19", "19:22", "19:25", "19:28", "19:31", "19:34", "19:37", "19:40", "19:43", "19:46", "19:49", "19:52", "19:55", "19:58", "20:01", "20:04", "20:07", "20:10", "20:13", "20:16", "20:19"], "series": {"PV1": [0.1, 0.1, 0.11, 0.06, 0.06, 0.14, 0.16, 0.16, 0.15, 0.17, 0.22, 0.21, 0.22, 0.33, 0.53, 0.7, 0.78, 0.92, 1.1, 1.45, 1.5, 1.53, 1.52, 1.61, 1.76, 1.92, 2.01, 2.15, 2.29, 2.66, 2.98, 3.23, 3.55, 3.72, 4.13, 4.06, 4.32, 4.95, 5.26, 5.33, 5.99, 3.8, 3.59, 2.63, 3.21, 2.91, 3.35, 3.11, 4.18, 4.01, 5.08, 3.94, 4.78, 4.12, 3.88, 2.77, 3.27, 5.62, 4.16, 5.83, 5.41, 5.02, 3.61, 3.53, 4.9, 4.9, 6.27, 8.59, 13.21, 7.05, 5.93, 5.82, 6.9, 6.63, 6.32, 7.88, 12.6, 5.27, 4.88, 14.06, 14.57, 11.67, 7.37, 8.72, 14.05, 8.27, 8.24, 6.73, 6.04, 6.09, 6.49, 6.23, 5.84, 5.68, 6.31, 5.9, 5.83, 5.75, 6.28, 15.92, 14.0, 7.62, 8.45, 9.44, 16.57, 9.7, 17.0, 16.37, 11.98, 12.81, 8.98, 17.44, 17.53, 8.04, 7.23, 10.84, 0.07, 13.7, 6.11, 17.19, 15.53, 4.61, 4.72, 15.9, 12.83, 6.18, 7.22, 11.51, 18.37, 6.21, 10.87, 8.79, 6.15, 19.34, 17.79, 17.06, 16.41, 6.9, 17.76, 9.98, 18.45, 8.31, 18.66, 16.66, 17.38, 18.08, 6.91, 17.65, 9.96, 18.66, 14.14, 12.94, 10.51, 18.24, 17.0, 17.27, 16.67, 16.43, 16.0, 16.81, 16.35, 16.16, 16.0, 14.33, 16.36, 15.96, 15.57, 5.23, 13.83, 17.21, 16.82, 7.3, 6.12, 15.2, 15.63, 15.86, 16.26, 16.79, 15.73, 5.53, 11.19, 15.98, 16.06, 16.88, 16.16, 15.85, 15.55, 6.59, 6.24, 8.85, 14.39, 13.88, 13.61, 13.27, 13.53, 13.4, 12.56, 13.07, 6.83, 11.07, 11.0, 4.73, 7.08, 11.24, 8.02, 4.46, 5.14, 4.51, 10.65, 10.81, 10.75, 8.78, 4.8, 3.66, 7.7, 5.44, 6.93, 7.28, 6.39, 6.9, 6.19, 6.72, 6.5, 5.85, 6.13, 5.15, 3.32, 4.89, 4.68, 3.78, 3.57, 3.48, 2.84, 2.74, 2.66, 2.44, 2.07, 1.84, 1.46, 1.29, 1.23, 1.1, 0.94, 0.9, 0.85, 0.79, 0.73, 0.64, 0.62, 0.56, 0.49, 0.47, 0.4, 0.33, 0.32, 0.26, 0.2, 0.17, 0.1, 0.05, 0.1, 0.1, 0.05, 0.05, 0.04, 0.03, 0.03, 0.02, 0.02, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.02, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.03, 0.03, 0.02, 0.02, 0.02, 0.02, 0.03, 0.02, 0.01], "PV2": [0.0, 0.0, 0.0, 0.0, 0.0, 0.05, 0.05, 0.05, 0.05, 0.06, 0.11, 0.11, 0.06, 0.16, 0.23, 0.35, 0.38, 0.43, 0.51, 0.71, 0.75, 0.74, 0.76, 0.82, 0.95, 1.01, 1.21, 1.16, 1.23, 1.37, 1.42, 1.46, 1.79, 1.75, 1.87, 2.25, 2.34, 2.79, 3.01, 2.99, 3.2, 2.09, 1.89, 1.37, 1.78, 1.63, 1.87, 1.7, 2.36, 2.22, 2.76, 2.0, 2.43, 2.12, 1.99, 1.43, 1.69, 3.16, 2.18, 3.01, 2.82, 2.57, 1.82, 1.82, 2.59, 2.56, 3.28, 4.46, 7.09, 3.72, 2.98, 2.94, 3.59, 3.45, 3.3, 4.76, 6.54, 2.75, 2.52, 7.53, 7.65, 6.97, 3.79, 4.52, 7.55, 4.09, 4.27, 3.46, 3.15, 3.13, 3.29, 3.22, 2.99, 2.94, 3.28, 3.01, 3.02, 2.97, 3.28, 8.33, 6.82, 3.97, 4.41, 4.97, 8.75, 5.05, 8.89, 8.68, 5.51, 7.23, 4.72, 8.97, 9.16, 4.13, 3.75, 5.34, 0.07, 7.02, 3.13, 9.03, 8.22, 2.38, 2.46, 8.34, 6.82, 3.16, 3.77, 6.37, 9.58, 3.2, 5.15, 4.88, 3.17, 10.04, 9.23, 8.92, 8.61, 3.68, 9.3, 5.26, 9.61, 4.34, 9.63, 8.96, 9.01, 9.29, 3.53, 8.5, 5.08, 10.03, 6.4, 5.94, 5.63, 9.38, 8.74, 8.93, 8.67, 8.52, 8.41, 8.67, 8.48, 8.39, 8.27, 7.58, 8.59, 8.37, 8.12, 2.7, 7.51, 8.99, 8.76, 3.73, 3.16, 5.95, 8.17, 8.3, 8.5, 8.75, 8.16, 2.86, 6.43, 8.3, 8.18, 8.79, 8.42, 8.32, 8.09, 3.36, 3.2, 4.97, 7.5, 7.21, 7.07, 6.97, 7.02, 6.95, 6.52, 6.79, 3.48, 5.64, 5.75, 2.45, 3.96, 5.91, 4.33, 2.31, 2.56, 2.33, 5.61, 5.71, 5.65, 4.39, 2.5, 1.88, 4.1, 2.78, 3.7, 3.81, 3.37, 3.68, 3.28, 3.6, 3.45, 3.07, 3.24, 2.68, 1.77, 2.65, 2.59, 2.04, 2.01, 1.93, 1.53, 1.53, 1.58, 1.49, 1.15, 1.0, 0.81, 0.7, 0.64, 0.53, 0.49, 0.45, 0.44, 0.41, 0.38, 0.34, 0.33, 0.32, 0.28, 0.26, 0.22, 0.16, 0.17, 0.11, 0.1, 0.06, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.04, 0.04, 0.03, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.0, 0.0, 0.02, 0.02, 0.0, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.0, 0.02, 0.02, 0.02, 0.02, 0.02, 0.0, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02]}}, "days": [{"date": "2026-10-07", "PV1": {"kwh": 97.73, "p": 12907.2, "v": 558.6, "i": 23.16, "imax": 32.8}, "PV2": {"kwh": 95.36, "p": 12553.9, "v": 538.6, "i": 23.38, "imax": 33.1}}, {"date": "2026-10-08", "PV1": {"kwh": 109.38, "p": 14686.1, "v": 552.4, "i": 26.84, "imax": 33.7}, "PV2": {"kwh": 106.78, "p": 14224.0, "v": 530.4, "i": 27.07, "imax": 33.6}}, {"date": "2026-10-09", "PV1": {"kwh": 80.29, "p": 10671.9, "v": 562.2, "i": 19.28, "imax": 34.3}, "PV2": {"kwh": 78.05, "p": 10373.9, "v": 543.7, "i": 19.4, "imax": 34.6}}, {"date": "2026-10-10", "PV1": {"kwh": 104.22, "p": 15925.0, "v": 551.7, "i": 28.89, "imax": 31.9}, "PV2": {"kwh": 102.23, "p": 15593.2, "v": 534.7, "i": 29.19, "imax": 32.4}}, {"date": "2026-10-11", "PV1": {"kwh": 119.1, "p": 16345.3, "v": 553.3, "i": 29.54, "imax": 31.4}, "PV2": {"kwh": 117.08, "p": 15968.8, "v": 536.3, "i": 29.78, "imax": 32.2}}, {"date": "2026-10-12", "PV1": {"kwh": 101.44, "p": 14285.1, "v": 558.5, "i": 25.61, "imax": 33.5}, "PV2": {"kwh": 99.05, "p": 13881.4, "v": 540.2, "i": 25.77, "imax": 33.9}}, {"date": "2026-10-13", "PV1": {"kwh": 117.58, "p": 16324.6, "v": 549.5, "i": 29.71, "imax": 32.0}, "PV2": {"kwh": 115.36, "p": 15957.6, "v": 532.0, "i": 30.0, "imax": 32.5}}, {"date": "2026-10-14", "PV1": {"kwh": 102.07, "p": 15371.9, "v": 553.0, "i": 27.87, "imax": 32.6}, "PV2": {"kwh": 99.78, "p": 15023.0, "v": 535.1, "i": 28.15, "imax": 32.9}}, {"date": "2026-10-15", "PV1": {"kwh": 88.38, "p": 12112.9, "v": 564.0, "i": 21.63, "imax": 33.7}, "PV2": {"kwh": 86.06, "p": 11805.3, "v": 546.9, "i": 21.72, "imax": 33.9}}, {"date": "2026-10-16", "PV1": {"kwh": 49.99, "p": 7994.5, "v": 571.9, "i": 13.89, "imax": 33.2}, "PV2": {"kwh": 48.3, "p": 7780.9, "v": 552.8, "i": 14.0, "imax": 32.2}}, {"date": "2026-10-17", "PV1": {"kwh": 101.7, "p": 13353.0, "v": 562.0, "i": 23.84, "imax": 34.1}, "PV2": {"kwh": 98.93, "p": 12971.7, "v": 538.1, "i": 24.18, "imax": 34.3}}, {"date": "2026-10-18", "PV1": {"kwh": 48.41, "p": 5087.5, "v": 586.0, "i": 8.69, "imax": 21.0}, "PV2": {"kwh": 46.77, "p": 4912.5, "v": 565.1, "i": 8.7, "imax": 21.6}}, {"date": "2026-10-19", "PV1": {"kwh": 104.24, "p": 13619.4, "v": 562.9, "i": 24.14, "imax": 33.6}, "PV2": {"kwh": 103.24, "p": 13417.8, "v": 548.3, "i": 24.41, "imax": 33.9}}, {"date": "2026-10-20", "PV1": {"kwh": 104.97, "p": 13527.0, "v": 560.9, "i": 24.18, "imax": 34.4}, "PV2": {"kwh": 103.66, "p": 13305.8, "v": 544.5, "i": 24.5, "imax": 35.1}}, {"date": "2026-10-21", "PV1": {"kwh": 89.34, "p": 10471.9, "v": 572.9, "i": 18.33, "imax": 39.4}, "PV2": {"kwh": 55.59, "p": 5462.2, "v": 576.7, "i": 9.5, "imax": 25.7}}, {"date": "2026-10-22", "PV1": {"kwh": 49.6, "p": 4917.1, "v": 584.4, "i": 8.41, "imax": 23.6}, "PV2": {"kwh": 25.8, "p": 2538.0, "v": 587.2, "i": 4.31, "imax": 12.8}}, {"date": "2026-10-23", "PV1": {"kwh": 61.57, "p": 9279.2, "v": 579.3, "i": 16.09, "imax": 36.9}, "PV2": {"kwh": 31.82, "p": 4788.5, "v": 583.9, "i": 8.23, "imax": 18.8}}, {"date": "2026-10-24", "PV1": {"kwh": 54.98, "p": 7120.3, "v": 582.2, "i": 12.22, "imax": 31.7}, "PV2": {"kwh": 28.41, "p": 3656.0, "v": 585.1, "i": 6.25, "imax": 16.1}}, {"date": "2026-10-25", "PV1": {"kwh": 61.7, "p": 8234.4, "v": 582.8, "i": 14.16, "imax": 26.2}, "PV2": {"kwh": 31.85, "p": 4246.1, "v": 586.8, "i": 7.26, "imax": 13.5}}, {"date": "2026-10-26", "PV1": {"kwh": 100.81, "p": 14725.6, "v": 564.8, "i": 26.15, "imax": 32.5}, "PV2": {"kwh": 52.66, "p": 7710.3, "v": 569.7, "i": 13.57, "imax": 16.7}}, {"date": "2026-10-27", "PV1": {"kwh": 117.07, "p": 15687.7, "v": 554.0, "i": 28.42, "imax": 35.0}, "PV2": {"kwh": 62.08, "p": 8235.2, "v": 565.7, "i": 14.6, "imax": 18.3}}, {"date": "2026-10-28", "PV1": {"kwh": 115.6, "p": 16151.6, "v": 551.3, "i": 29.31, "imax": 32.2}, "PV2": {"kwh": 61.05, "p": 8508.4, "v": 563.9, "i": 15.1, "imax": 16.4}}, {"date": "2026-10-29", "PV1": {"kwh": 119.08, "p": 16435.6, "v": 547.7, "i": 30.01, "imax": 32.0}, "PV2": {"kwh": 62.74, "p": 8541.6, "v": 553.3, "i": 15.44, "imax": 16.4}}, {"date": "2026-10-30", "PV1": {"kwh": 107.35, "p": 14214.8, "v": 548.9, "i": 26.01, "imax": 30.8}, "PV2": {"kwh": 56.43, "p": 7394.9, "v": 552.6, "i": 13.44, "imax": 15.7}}, {"date": "2026-10-31", "PV1": {"kwh": 101.29, "p": 13935.7, "v": 548.4, "i": 25.45, "imax": 33.0}, "PV2": {"kwh": 53.19, "p": 7216.8, "v": 555.6, "i": 13.02, "imax": 17.2}}, {"date": "2026-11-01", "PV1": {"kwh": 105.9, "p": 13786.0, "v": 550.9, "i": 25.12, "imax": 34.7}, "PV2": {"kwh": 55.8, "p": 7170.6, "v": 557.6, "i": 12.9, "imax": 17.8}}, {"date": "2026-11-02", "PV1": {"kwh": 77.51, "p": 8453.8, "v": 576.7, "i": 14.7, "imax": 30.1}, "PV2": {"kwh": 40.55, "p": 4395.6, "v": 580.8, "i": 7.59, "imax": 15.5}}, {"date": "2026-11-03", "PV1": {"kwh": 76.76, "p": 11525.2, "v": 562.7, "i": 20.8, "imax": 37.0}, "PV2": {"kwh": 40.02, "p": 6027.8, "v": 566.6, "i": 10.77, "imax": 19.1}}, {"date": "2026-11-04", "PV1": {"kwh": 43.85, "p": 4164.0, "v": 573.5, "i": 7.33, "imax": 31.9}, "PV2": {"kwh": 22.57, "p": 2149.4, "v": 561.2, "i": 3.79, "imax": 16.2}}, {"date": "2026-11-05", "PV1": {"kwh": 90.7, "p": 13650.2, "v": 555.9, "i": 24.62, "imax": 34.3}, "PV2": {"kwh": 47.31, "p": 7061.9, "v": 562.7, "i": 12.59, "imax": 18.5}}], "branches": null, "health": {"status": "critical", "headline": "Needs attention: PV1 \u2014 voltage down 4% \u2014 about 1 of 15 panels; PV2 \u2014 output down 47%", "items": [{"string": "PV1", "status": "critical", "title": "Voltage down 4% \u2014 about 1 of 15 panels", "detail": "A drop in string voltage means part of the string stopped contributing: most likely a failed panel, bypass diode or connector. Ask your installer to check this string's panels (a thermal camera finds it fast)."}, {"string": "PV2", "status": "critical", "title": "Output down 47%", "detail": "Voltage is normal but current is lower, which points to shading, dust or bird droppings on this string."}], "checked": ["2026-10-31", "2026-11-01", "2026-11-05"], "count": 2}, "panels": {"PV1": {"n": 15, "est": false, "v": 572, "ipeak": 35.0, "p": 2, "est_p": false, "p_how": "config", "total": 30, "vrel": 0.9}, "PV2": {"n": 15, "est": false, "v": 566, "ipeak": 33.9, "p": 2, "est_p": false, "p_how": "config", "total": 30, "vrel": -0.8}, "_meta": {"cap_panels": 60, "sum": 60, "panel_watts": 625.0}}, "panel_watts": 625.0}, "lat": 12.9041819, "lng": 77.5906957, "update": {"text": "\u2600\ufe0f Sumukha Opal Solar  \u2014 Solar update\nThursday, 5 Nov 2026\n\nYesterday our rooftop made *64 units* \u2014 a lighter day \u2014 the clouds had their say \u2601\ufe0f.\n\n\ud83c\udf27\ufe0f *Today's forecast for Bengaluru:* Showers on the way \u2014 a gentle day for solar and a refreshing one for the city. We expect around *130\u2013170 units*, with about 9.6 hours of sunshine.\n\ud83c\udf21\ufe0f 20\u201328\u00b0C \u00b7 \u2601\ufe0f 78% cloud \u00b7 \ud83c\udf27\ufe0f 98% chance of rain (~4 mm) \u00b7 \ud83d\udca7 85% humidity \u00b7 \ud83d\udca8 up to 11 km/h\n\nThis month so far: 451 units\nLast month (October): 5,188 units", "date": "2026-11-05"}, "alert_days": 30, "generated": "05 Nov 2026, 08:56 PM", "generated_ts": 1793892412, "tz_offset": 330, "run_times": [480, 840, 1200]};
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmt = (n, d=1) => Number(n).toLocaleString('en-IN', {maximumFractionDigits:d, minimumFractionDigits:0});
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const dayLabel = iso => { const d = new Date(iso+'T00:00'); return d.getDate()+' '+MONTHS[d.getMonth()]; };
+
+const daily = D.daily.map(([d,v]) => ({d, v:+v}));
+const last = daily[daily.length-1] || {d:new Date().toISOString().slice(0,10), v:0};
+const todayStr = last.d, ym = todayStr.slice(0,7), yr = todayStr.slice(0,4);
+const sum = a => a.reduce((s,x)=>s+x.v,0);
+const total = sum(daily);
+const monthTot = sum(daily.filter(x=>x.d.startsWith(ym)));
+const yearTot = sum(daily.filter(x=>x.d.startsWith(yr)));
+
+const byMonth = {}, byYear = {};
+daily.forEach(x => { byMonth[x.d.slice(0,7)] = (byMonth[x.d.slice(0,7)]||0)+x.v; byYear[x.d.slice(0,4)] = (byYear[x.d.slice(0,4)]||0)+x.v; });
+const monthKeys = Object.keys(byMonth).sort().slice(-24);
+// weeks run Monday–Sunday; key = the Monday's date
+const weekStart = iso => { const d = new Date(iso+'T00:00'); d.setDate(d.getDate() - ((d.getDay()+6)%7));
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
+const byWeek = {}, weekDays = {};
+daily.forEach(x => { const w = weekStart(x.d); byWeek[w] = (byWeek[w]||0) + x.v; (weekDays[w] = weekDays[w] || []).push(x); });
+const weekKeys = Object.keys(byWeek).sort().slice(-26);
+const thisWeek = weekKeys[weekKeys.length-1];
+// this week vs the same days of last week (fair comparison mid-week)
+const weekCompare = (() => {
+  if (weekKeys.length < 2) return null;
+  const cur = weekDays[thisWeek] || [], n = cur.length;
+  const prevKey = weekKeys[weekKeys.length-2], prev = (weekDays[prevKey] || []).slice(0, n);
+  const a = sum(cur), b = sum(prev);
+  return b ? {a, b, n, pct: (a-b)/b*100} : null;
+})();
+const yearKeys = Object.keys(byYear).sort();
+const mLabel = k => MONTHS[+k.slice(5)-1] + " '" + k.slice(2,4);
+
+// headline
+document.getElementById('name').textContent = D.name;
+document.getElementById('updated').textContent = 'Updated ' + D.generated + (D.capacity ? ' · ' + fmt(D.capacity) + ' kW system' : '');
+// "Next update around …" from RUN_TIMES, worked out in the plant's time zone
+(function(){
+  const T = D.run_times || []; if (!T.length) return;
+  const off = D.tz_offset * 60000;                       // plant time zone, e.g. IST = +330 min
+  const local = ms => new Date(ms + off);                // shift, then read with getUTC*
+  const nowMs = Date.now(), n = local(nowMs), mins = n.getUTCHours()*60 + n.getUTCMinutes();
+  let next = T.find(t => t > mins), dayAdd = 0;
+  if (next === undefined){ next = T[0]; dayAdd = 1; }
+  const hh = Math.floor(next/60), mm = next%60;
+  const label = ((hh+11)%12+1) + ':' + String(mm).padStart(2,'0') + (hh < 12 ? ' AM' : ' PM') + (dayAdd ? ' tomorrow' : '');
+  // was a scheduled run missed? find the latest scheduled time before now
+  let prev = null;
+  for (let d = 0; d <= 2 && prev === null; d++){
+    const cands = T.filter(t => d > 0 || t <= mins);
+    if (cands.length){
+      const t = cands[cands.length-1], base = Date.UTC(n.getUTCFullYear(), n.getUTCMonth(), n.getUTCDate() - d);
+      prev = base + t*60000 - off;                       // back to real epoch ms
+    }
+  }
+  const el = document.createElement('div'); el.className = 'sub nextrun';
+  const lateBy = prev ? (prev - D.generated_ts*1000) : 0;
+  if (lateBy > 75*60000){
+    el.innerHTML = '⚠️ <b>Update overdue</b> — a scheduled refresh hasn’t arrived. Next one around ' + label + '.';
+  } else {
+    el.textContent = '🔄 Next update around ' + label + ' (can be up to 30 min late)';
+  }
+  document.getElementById('updated').after(el);
+})();
+document.getElementById('today').innerHTML = fmt(last.v) + ' <small>units</small>';
+document.getElementById('month').innerHTML = fmt(monthTot,0) + ' <small>units</small>';
+document.getElementById('year').innerHTML = fmt(yearTot,0) + ' <small>units</small>';
+document.getElementById('all').innerHTML = fmt(total,0) + ' <small>units</small>';
+
+const prev30 = daily.slice(-31,-1);
+const avg30 = prev30.length ? sum(prev30)/prev30.length : 0;
+const parts = [];
+if (D.curve.length){
+  const peak = D.curve.reduce((a,b)=> b[1]>a[1]?b:a);
+  parts.push('Peak ' + fmt(peak[1],2) + ' kW at ' + peak[0]);
+}
+if (avg30) parts.push('30-day average is ' + fmt(avg30) + ' units/day');
+const note = parts.join(' · ');
+document.getElementById('todayNote').textContent = note;
+
+// ---------- strings / health ----------
+const S = D.strings && D.strings.names && D.strings.names.length ? D.strings : null;
+const B = S && S.branches && S.branches.names.length ? S.branches : null;
+const lab = s => { const m = /^(?:(\w{4})-)?S(\d+)$/.exec(s); return m ? (m[1] ? m[1]+' ' : '') + 'String ' + m[2] : s; };
+const bUsual = b => { const v = B.days.slice(-15,-1).map(d=>d[b]).filter(x=>x>0).sort((a,c)=>a-c); return v.length ? v[Math.floor(v.length/2)] : 0; };
+const SCOL = ['--s1','--s2','--s3','--s4'];
+const scol = i => css(SCOL[i % 4]);
+const STATUS = {
+  good:{label:'Healthy', c:'--good', icon:'✓'}, warning:{label:'Watch', c:'--warning', icon:'!'},
+  critical:{label:'Needs attention', c:'--critical', icon:'✕'},
+  learning:{label:'Learning', c:'--line', icon:'…'}, unknown:{label:'No data', c:'--line', icon:'?'}
+};
+if (S){
+  document.getElementById('stringsTab').hidden = false;
+  if (B) document.getElementById('branchTab').hidden = false;
+  const h = S.health, st = STATUS[h.status] || STATUS.unknown;
+  const box = document.getElementById('health');
+  box.hidden = false; box.className = 'card health ' + h.status;
+  const lastDay = S.days[S.days.length-1] || {};
+  const prevDays = S.days.slice(-15,-1);
+  const usual = s => { const v = prevDays.map(d => d[s] && d[s].kwh).filter(x=>x>0).sort((a,b)=>a-b); return v.length ? v[Math.floor(v.length/2)] : 0; };
+  const yday = S.days.length > 1 ? S.days[S.days.length-2] : lastDay;
+  let html = `<div class="hhead"><span class="badge"><i style="background:var(${st.c})"></i>${st.icon} ${st.label}</span>
+    <div><h2 style="margin:0">Panel health</h2><div class="sub">${esc(h.headline)}</div></div></div>`;
+  h.items.forEach(i => { html += `<div class="issue"><b>${i.status==='critical'?'⛔':'⚠️'} ${esc(lab(i.string))}: ${esc(i.title)}</b><p>${esc(i.detail)}</p></div>`; });
+  html += `<div class="tablewrap"><table class="stack"><thead><tr><th>Input</th><th title="panels in series × strings in parallel">Panels (series × strings)</th><th>Yesterday</th><th>Usual day</th><th>Midday volts</th><th>Midday amps</th></tr></thead><tbody>`;
+  const P = S.panels || {};
+  const panelText = x => !x ? '–' : x.total
+    ? `${x.est?'≈':''}${x.n} × ${x.est_p?'≈':''}${x.p} = ${x.total}`
+    : `${x.est?'≈':''}${x.n} in series`;
+  S.names.forEach((s,i) => { const y = yday[s] || {};
+    html += `<tr><td><span class="sw" style="background:var(${SCOL[i%4]})"></span>${esc(s)}</td><td data-label="Panels (series × strings)" title="${P[s] && (P[s].est || P[s].est_p) ? 'Estimated — set STRING_PANELS / PARALLEL_STRINGS in the script for exact numbers' : ''}">${panelText(P[s])}</td><td data-label="Yesterday">${fmt(y.kwh||0)} units</td><td data-label="Usual day">${fmt(usual(s))} units</td><td data-label="Midday volts">${fmt(y.v||0,0)} V</td><td data-label="Midday amps">${fmt(y.i||0,1)} A</td></tr>`; });
+  html += `</tbody></table></div>`;
+  const PM = P._meta || {};
+  const pn = Object.entries(P).filter(([k]) => k !== '_meta'), known = pn.length && pn.every(([,x]) => x.total);
+  const tot = pn.reduce((a,[,x])=>a+(x.total||0),0);
+  if (pn.length){
+    const notes = [];
+    if (pn.some(([,x])=>x.est||x.est_p)) notes.push('Values marked ≈ are worked out from your history: panels in series from midday voltage, strings from peak current.');
+    notes.push(known ? 'Total: ' + tot + ' panels' + (PM.panel_watts ? ' × ' + PM.panel_watts + ' W = ' + fmt(tot*PM.panel_watts/1000,2) + ' kW' : '') + '.'
+                     : 'Set PANEL_WATTS to also work out strings in parallel.');
+    if (PM.cap_panels && known && PM.cap_panels !== tot)
+      notes.push('Your plant size in Deye (' + fmt(D.capacity,2) + ' kW) points to ' + PM.cap_panels + ' panels.');
+    pn.forEach(([s,x]) => { if (x.vrel != null && x.vrel <= -2 && x.p >= 2)
+      notes.push(s + ' runs ' + fmt(-x.vrel,1) + '% lower in voltage than the other input every day — one of its strings may be a panel shorter (e.g. ' + x.n + ' + ' + (x.n-1) + ').'); });
+    html += `<div class="sub" style="margin-top:6px">${notes.map(esc).join(' ')}</div>`;
+  }
+  if (B){
+    const bLast = B.days.length > 1 ? B.days[B.days.length-2] : (B.days[0]||{});
+    html += `<div class="tablewrap"><table class="stack"><thead><tr><th>Individual string</th><th>Midday amps (yesterday)</th><th>Usual</th><th>Status</th></tr></thead><tbody>`;
+    B.names.forEach(b => { const f = B.flags[b], stt = STATUS[f||'good'];
+      html += `<tr><td>${esc(lab(b))}</td><td data-label="Midday amps (yesterday)">${fmt(bLast[b]||0,1)} A</td><td data-label="Usual">${fmt(bUsual(b),1)} A</td><td data-label="Status"><span class="sw" style="background:var(${stt.c});border-radius:50%"></span>${f ? stt.label : 'OK'}</td></tr>`; });
+    html += `</tbody></table></div>`;
+  }
+  box.innerHTML = html;
+}
+
+// ---------- inverter alerts ----------
+if (D.alerts){
+  const A = D.alerts, box = document.getElementById('alertsCard'); box.hidden = false;
+  const fmtT = t => t ? t.slice(8,10)+'/'+t.slice(5,7)+' '+t.slice(11,16) : '';
+  const dur = a => { if (!a.end || !a.start) return '';
+    const m = Math.round((new Date(a.end.replace(' ','T')) - new Date(a.start.replace(' ','T'))) / 60000);
+    return m < 60 ? m + ' min' : (m < 1440 ? (m/60).toFixed(1).replace('.0','') + ' h' : Math.round(m/1440) + ' days'); };
+  const LV = {error:['--critical','Fault'], warning:['--warning','Warning'], info:['--muted','Info']};
+  let html = `<h2>Inverter alerts <span class="sub" style="font-weight:700">· last ${D.alert_days || 30} days</span></h2>`;
+  if (!A.available && !A.items.length){
+    html += `<div class="sub">The inverter's alert log couldn't be read this time.</div>`;
+  } else if (!A.items.length){
+    html += `<div class="sub">✅ No alerts from the inverter in the last ${D.alert_days || 30} days.</div>`;
+  } else {
+    const active = A.items.filter(a => a.ongoing).length;
+    html += `<div class="sub">${active ? '<b>' + active + ' active now</b> · ' : 'None active now · '}${A.items.length} in total</div><ul class="alist">`;
+    A.items.slice(0, 15).forEach(a => {
+      const [c, lbl] = LV[a.level] || LV.info;
+      const when = a.ongoing ? `since ${fmtT(a.start)} · <b>still active</b>` : `${fmtT(a.start)} · cleared after ${dur(a)}`;
+      const more = [a.reason && `<p><b>Cause:</b> ${esc(a.reason)}</p>`, a.solution && `<p><b>What to do:</b> ${esc(a.solution)}</p>`].filter(Boolean).join('');
+      html += `<li class="${a.ongoing ? 'on' : ''}"><span class="sw" style="background:var(${c});border-radius:50%"></span>
+        <div><div><b>${esc(a.name)}</b> <span class="sub">${lbl}${a.code ? ' · ' + esc(a.code) : ''} · <span style="white-space:nowrap">${esc(a.device)}</span></span></div>
+        <div class="sub">${when}</div>${more ? `<details><summary>Details</summary>${more}</details>` : ''}</div></li>`;
+    });
+    html += `</ul>`;
+    if (A.items.length > 15) html += `<div class="sub">…and ${A.items.length - 15} more.</div>`;
+  }
+  box.innerHTML = html;
+}
+
+// facts
+const facts = [];
+const completeDays = daily.slice(0,-1);
+if (completeDays.length){
+  const best = completeDays.reduce((a,b)=> b.v>a.v?b:a);
+  const bd = new Date(best.d+'T00:00');
+  facts.push(['🏆', 'Best day ever', fmt(best.v)+' units on '+bd.getDate()+' '+MONTHS[bd.getMonth()]+' '+bd.getFullYear()]);
+}
+const mDays = daily.filter(x=>x.d.startsWith(ym));
+if (weekCompare) facts.push([weekCompare.pct>=0?'📈':'📉', 'This week vs last week',
+  (weekCompare.pct>=0?'+':'')+fmt(weekCompare.pct,0)+'% ('+fmt(weekCompare.a,0)+' vs '+fmt(weekCompare.b,0)+' units, first '+weekCompare.n+' day'+(weekCompare.n>1?'s':'')+')']);
+if (mDays.length) facts.push(['📅', 'Daily average this month', fmt(monthTot/mDays.length)+' units/day']);
+const pm = new Date(ym+'-01T00:00'); pm.setMonth(pm.getMonth()-1);
+const pmKey = pm.getFullYear()+'-'+String(pm.getMonth()+1).padStart(2,'0');
+if (byMonth[pmKey]){
+  const dim = new Date(pm.getFullYear(), pm.getMonth()+1, 0).getDate();
+  const pmAvg = byMonth[pmKey]/dim, cur = mDays.length ? monthTot/mDays.length : 0;
+  const pct = pmAvg ? (cur-pmAvg)/pmAvg*100 : 0;
+  facts.push([pct>=0?'📈':'📉', 'Compared with '+MONTHS[pm.getMonth()], (pct>=0?'+':'')+fmt(pct,0)+'% per day ('+fmt(byMonth[pmKey],0)+' units last month)']);
+}
+if (D.capacity && avg30) facts.push(['🔆', 'Units per kW (30-day avg)', fmt(avg30/D.capacity,2)+' per day — 4+ is healthy']);
+if (D.update && D.update.text){
+  const u = document.getElementById('update'); u.hidden = false;
+  document.getElementById('updateText').innerHTML = esc(D.update.text).replace(/\*([^*\n]+)\*/g, '<b>$1</b>');
+  // api.whatsapp.com keeps emoji intact (the wa.me redirect can garble them); the invisible
+  // emoji-style marker U+FE0F is dropped as some phones show it as a box
+  document.getElementById('waShare').href = 'https://api.whatsapp.com/send?text=' +
+    encodeURIComponent(D.update.text.replace(/\uFE0F/g, ''));
+  document.getElementById('copyUpdate').onclick = async ev => {
+    try { await navigator.clipboard.writeText(D.update.text); ev.target.textContent = 'Copied ✓'; }
+    catch(e) { ev.target.textContent = 'Select the text above to copy'; }
+  };
+}
+document.getElementById('facts').innerHTML = facts.map(([e,k,v]) =>
+  `<div class="card fact"><span class="e">${e}</span><div><div class="k">${k}</div><div style="font-weight:800">${v}</div></div></div>`).join('');
+
+// ---------- date range ----------
+const rFrom = document.getElementById('rFrom'), rTo = document.getElementById('rTo');
+const firstDay = daily.length ? daily[0].d : todayStr;
+const longDate = iso => iso.slice(8,10) + '/' + iso.slice(5,7) + '/' + iso.slice(0,4);
+const iso = d => d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const ddmmyyyy = v => v ? v.slice(8,10) + '/' + v.slice(5,7) + '/' + v.slice(0,4) : 'dd/mm/yyyy';
+function showDates(){
+  document.getElementById('rFromText').textContent = ddmmyyyy(rFrom.value);
+  document.getElementById('rToText').textContent = ddmmyyyy(rTo.value);
+}
+[rFrom, rTo].forEach(el => {
+  el.min = firstDay; el.max = todayStr;
+  el.onchange = () => { showDates(); draw(); };
+  el.onclick = () => { try { el.showPicker(); } catch(e) {} };   // desktop browsers
+});
+function setRange(p){
+  const t = new Date(todayStr+'T00:00'); let a = new Date(t), b = new Date(t);
+  if (p === '7') a.setDate(t.getDate()-6);
+  else if (p === 'month') a = new Date(t.getFullYear(), t.getMonth(), 1);
+  else if (p === 'lastmonth') { a = new Date(t.getFullYear(), t.getMonth()-1, 1); b = new Date(t.getFullYear(), t.getMonth(), 0); }
+  else if (p === 'year') a = new Date(t.getFullYear(), 0, 1);
+  else if (p === 'all') a = new Date(firstDay+'T00:00');
+  rFrom.value = iso(a) < firstDay ? firstDay : iso(a); rTo.value = iso(b);
+  showDates();
+}
+setRange('month');
+document.querySelectorAll('.presets button').forEach(b => b.onclick = () => { setRange(b.dataset.p); draw(); });
+
+// ---------- chart ----------
+let chart, view = 'today', sub = 'sToday';
+function draw(){
+  const sun = css('--sun'), soft = css('--sun-soft'), ink = css('--muted'), line = css('--line'), card = css('--card');
+  let type='bar', labels=[], datasets=[], unit='units', cap='', yMin;
+  const single = (vals, isLine, lastPartial=true) => [{data:vals, borderColor:sun, borderWidth:isLine?2:0,
+      // solid bars; the last one (today / this month / this year, still in progress) is lighter
+      backgroundColor: isLine ? soft : vals.map((v,i)=> (lastPartial && i===vals.length-1) ? sun+'80' : sun),
+      hoverBackgroundColor:sun, borderSkipped:false, fill:isLine, tension:.35, pointRadius:0, borderRadius:4}];
+  document.getElementById('subtabs').classList.toggle('show', view==='strings');
+  document.getElementById('rangebar').classList.toggle('show', view==='range');
+  document.getElementById('rangesum').classList.toggle('show', view==='range');
+  if (view==='today'){
+    type='line'; unit='kW';
+    labels = D.curve.map(x=>x[0]); datasets = single(D.curve.map(x=>x[1]), true);
+    cap = D.curve.length ? 'Power from your panels through the day (kW). The area under the curve is the units made.' : 'No readings for today yet.';
+  } else if (view==='days'){
+    const s = daily.slice(-30);
+    labels = s.map(x=>dayLabel(x.d)); datasets = single(s.map(x=>+x.v.toFixed(2)));
+    cap = 'Units generated each day. Total for these 30 days: '+fmt(sum(s),0)+' units.';
+  } else if (view==='weeks'){
+    const wl = k => { const d = new Date(k+'T00:00'); return d.getDate()+' '+MONTHS[d.getMonth()]; };
+    labels = weekKeys.map(wl); datasets = single(weekKeys.map(k=>+byWeek[k].toFixed(1)));
+    cap = 'Units per week (Monday–Sunday, labelled by the Monday). A slow slide over several sunny weeks often means dust — time for a wash.';
+    if (weekCompare) cap += ' This week so far: ' + fmt(weekCompare.a,0) + ' units vs ' + fmt(weekCompare.b,0) +
+      ' in the same ' + weekCompare.n + ' day' + (weekCompare.n>1?'s':'') + ' last week (' + (weekCompare.pct>=0?'+':'') + fmt(weekCompare.pct,0) + '%).';
+  } else if (view==='months'){
+    labels = monthKeys.map(mLabel); datasets = single(monthKeys.map(k=>+byMonth[k].toFixed(1)));
+    cap = 'Units per month. Monsoon months usually dip — that’s clouds, not a fault.';
+  } else if (view==='range'){
+    let a = rFrom.value || firstDay, b = rTo.value || todayStr;
+    if (a > b) [a, b] = [b, a];
+    const sel = daily.filter(x => x.d >= a && x.d <= b);
+    const tot = sum(sel), n = sel.length;
+    const best = sel.reduce((m,x)=> x.v > (m ? m.v : -1) ? x : m, null);
+    const partial = b >= todayStr;
+    const span = (new Date(b) - new Date(a)) / 864e5 + 1;
+    if (span <= 62){
+      labels = sel.map(x=>dayLabel(x.d)); datasets = single(sel.map(x=>+x.v.toFixed(2)), false, partial);
+      cap = 'Units generated each day from '+longDate(a)+' to '+longDate(b)+'.';
+    } else {
+      const m = {}; sel.forEach(x => m[x.d.slice(0,7)] = (m[x.d.slice(0,7)]||0) + x.v);
+      const ks = Object.keys(m).sort();
+      labels = ks.map(mLabel); datasets = single(ks.map(k=>+m[k].toFixed(1)), false, partial);
+      cap = 'Units per month from '+longDate(a)+' to '+longDate(b)+' (long ranges are grouped by month).';
+    }
+    document.getElementById('rangesum').innerHTML =
+      `<div><div class="k">Total</div><div class="v">${fmt(tot,1)} units</div></div>
+       <div><div class="k">Days with data</div><div class="v">${n}</div></div>
+       <div><div class="k">Average per day</div><div class="v">${n ? fmt(tot/n,1) : 0} units</div></div>
+       <div><div class="k">Best day</div><div class="v">${best ? fmt(best.v,1)+' <small style="font-size:.8rem;color:var(--muted)">'+dayLabel(best.d)+'</small>' : '–'}</div></div>`;
+    if (!n) cap = 'No data in this range.';
+  } else if (view==='years'){
+    labels = yearKeys; datasets = single(yearKeys.map(k=>+byYear[k].toFixed(0)));
+    cap = 'Units per year (current year is partial).';
+  } else {
+    type='line';
+    const mk = (s,i,data) => ({label:s, data, borderColor:scol(i), backgroundColor:scol(i), borderWidth:2,
+      tension:.3, pointRadius: sub==='sToday'?0:3, pointHoverRadius:5, pointBorderColor:card, pointBorderWidth:2, spanGaps:true});
+    if (sub==='sBranch'){
+      type='bar'; unit='amps';
+      const bLast = B.days.length > 1 ? B.days[B.days.length-2] : (B.days[0]||{});
+      labels = B.names.map(lab);
+      datasets = [
+        {label:'Yesterday (midday)', data:B.names.map(b=>bLast[b]||0), borderRadius:4, borderSkipped:false,
+         backgroundColor:B.names.map(b => B.flags[b] ? css(STATUS[B.flags[b]].c) : scol(0))},
+        {label:'Usual', data:B.names.map(bUsual), borderRadius:4, borderSkipped:false, backgroundColor:css('--muted')+'66'}
+      ];
+      cap = 'Midday current of each individual string, yesterday vs its usual. Strings with the same number of panels facing the same way should be about equal; a shorter bar marked in amber/red is the one to inspect.';
+    } else if (sub==='sToday'){
+      unit='kW'; labels = S.today.labels;
+      datasets = S.names.map((s,i)=> mk(s,i,S.today.series[s]));
+      cap = 'Each string’s power today. Strings facing the same way should track together; a string sitting lower all day deserves a look.';
+    } else {
+      const days = S.days;
+      labels = days.map(d=>dayLabel(d.date));
+      if (sub==='sShare'){
+        unit='% of output';
+        datasets = S.names.map((s,i)=> mk(s,i, days.map(d => { const t = S.names.reduce((a,n)=>a+((d[n]||{}).p||0),0); return t ? +(((d[s]||{}).p||0)/t*100).toFixed(1) : null; })));
+        cap = 'Each string’s share of midday output. Clouds hit every string equally, so these lines stay flat when all is well — a step down means that string lost something.';
+      } else {
+        unit='volts';
+        datasets = S.names.map((s,i)=> mk(s,i, days.map(d => (d[s] && d[s].v) || null)));
+        const vs = datasets.flatMap(d=>d.data).filter(x=>x); yMin = vs.length ? Math.floor(Math.min(...vs)*0.85/10)*10 : undefined;
+        cap = 'Average string voltage between 11am and 2pm. Each panel adds about the same voltage, so a sudden step down usually means one panel (or its diode/connector) has dropped out.';
+      }
+    }
+  }
+  document.getElementById('caption').textContent = cap;
+  if (chart) chart.destroy();
+  const multi = datasets.length > 1;
+  chart = new Chart(document.getElementById('chart'), {
+    type, data:{labels, datasets},
+    options:{
+      responsive:true, maintainAspectRatio:false, animation:{duration:400},
+      interaction: multi ? {mode:'index', intersect:false} : {mode:'nearest', intersect:false},
+      plugins:{
+        legend:{display:multi, position:'top', align:'start', labels:{color:ink, usePointStyle:true, boxWidth:8}},
+        tooltip:{callbacks:{label:c => (multi? c.dataset.label+': ' : '') + fmt(c.parsed.y,2)+' '+unit}}
+      },
+      scales:{
+        x:{grid:{display:false}, ticks:{color:ink, maxRotation:0, autoSkip:true, maxTicksLimit: (view==='today'||sub==='sToday')?8:10}},
+        y:{beginAtZero: yMin===undefined, min:yMin, grid:{color:line}, ticks:{color:ink}, title:{display:true, text:unit, color:ink}}
+      }
+    }
+  });
+}
+document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => {
+  document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on', x===b));
+  view = b.dataset.v; draw();
+});
+document.querySelectorAll('.subtabs button').forEach(b => b.onclick = () => {
+  document.querySelectorAll('.subtabs button').forEach(x=>x.classList.toggle('on', x===b));
+  sub = b.dataset.s; draw();
+});
+const sel = document.getElementById('themeSel');
+try { const saved = localStorage.getItem('solarTheme'); if (saved && sel.querySelector(`[value="${saved}"]`)) document.documentElement.dataset.palette = saved; } catch(e) {}
+sel.value = document.documentElement.dataset.palette;
+sel.onchange = () => {
+  document.documentElement.dataset.palette = sel.value;
+  try { localStorage.setItem('solarTheme', sel.value); } catch(e) {}
+  draw();
+};
+draw();
+</script>
+</body>
+</html>
