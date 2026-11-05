@@ -134,6 +134,8 @@ MASK_IDS = False            # True = shorten plant name / IDs in printed output 
 # yesterday's units, today's weather outlook for the rooftop and a closing line.
 RESIDENT_UPDATE = True
 COMMUNITY_NAME = ""         # e.g. "Sumukha Opal"; blank = DISPLAY_NAME
+UPDATE_TITLE = ""           # whole first line of the message, e.g. "Sumukha Opal - Solar Status";
+                            # blank = "<COMMUNITY_NAME> — Solar update"
 DASHBOARD_URL = ""          # your GitHub Pages URL (only used if UPDATE_DASHBOARD_LINK is on)
 UPDATE_CLOSING_LINE = False # add a friendly closing line ("Clean energy, made right on our own roof 💚")
 UPDATE_DASHBOARD_LINK = False  # end the message with the dashboard link
@@ -170,7 +172,8 @@ def _apply_env_overrides():
                  "STATION_ID", "START_DATE", "TIMEZONE", "DISPLAY_NAME", "THEME", "RUN_TIMES",
                  "TELEGRAM_BOT_TOKEN", "TELEGRAM_CHAT_ID", "FAST2SMS_API_KEY", "FAST2SMS_NUMBERS",
                  "HISTORY_CSV", "STRINGS_JSON", "ALERT_STATE", "OUTPUT_HTML", "DASHBOARD_PASSWORD",
-                 "COMMUNITY_NAME", "DASHBOARD_URL", "RESIDENT_TELEGRAM_CHAT", "FORECAST_JSON", "UPDATE_TXT",
+                 "COMMUNITY_NAME", "UPDATE_TITLE", "DASHBOARD_URL", "RESIDENT_TELEGRAM_CHAT",
+                 "FORECAST_JSON", "UPDATE_TXT",
                  "ALERTS_JSON"):
         if os.environ.get(name):
             g[name] = os.environ[name]
@@ -263,8 +266,15 @@ class Deye:
         if self.token and time.time() < self.token_expires - 60:
             return self.token
         if not (APP_ID and APP_SECRET and PASSWORD and (EMAIL or MOBILE)):
-            sys.exit("Fill APP_ID, APP_SECRET, PASSWORD and EMAIL (or MOBILE) "
-                     "in the CONFIG block — or run with --demo.")
+            missing = [n for n, v in (("APP_ID", APP_ID), ("APP_SECRET", APP_SECRET),
+                                      ("PASSWORD", PASSWORD), ("EMAIL or MOBILE", EMAIL or MOBILE)) if not v]
+            if os.environ.get("GITHUB_ACTIONS"):
+                sys.exit("Deye login not found: " + ", ".join(missing) + " missing.\n"
+                         "Add them under Settings → Secrets and variables → Actions → *Secrets* tab "
+                         "(not Variables), named exactly: " +
+                         ", ".join("DEYE_" + n.split()[0] if n != "EMAIL or MOBILE" else "DEYE_EMAIL (or DEYE_MOBILE)"
+                                   for n in missing) + ". Leave the CONFIG block in solar_chart.py blank.")
+            sys.exit("Missing in the CONFIG block: " + ", ".join(missing) + " — or run with --demo.")
         body = {"appSecret": APP_SECRET,
                 "password": hashlib.sha256(PASSWORD.encode()).hexdigest()}
         if EMAIL:
@@ -2062,7 +2072,13 @@ def compose_update(data, fc, log, today):
     by = dict(daily)
     yday = (today - timedelta(days=1)).isoformat()
     seed = today.toordinal()
-    lines = [f"☀️ {name} — Solar update", f"{today.strftime('%A')}, {today.day} {today.strftime('%b %Y')}", ""]
+    if UPDATE_TITLE:
+        title = UPDATE_TITLE
+    elif "solar" in name.lower():             # name already says "Solar …" — don't repeat it
+        title = name
+    else:
+        title = f"{name} — Solar update"
+    lines = [f"☀️ {title}", f"{today.strftime('%A')}, {today.day} {today.strftime('%b %Y')}", ""]
 
     y = by.get(yday)
     prior = [v for d, v in daily if d < yday][-30:]
