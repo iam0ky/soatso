@@ -1,0 +1,6 @@
+# history lives in the private Actions cache, never in this public repo
+data/
+*.csv
+strings_history.json
+alert_state.json
+__pycache__/
