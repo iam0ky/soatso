@@ -90,10 +90,10 @@ START_DATE = ""             # DD/MM/YYYY, e.g. "01/01/2024"; blank = station's c
 TIMEZONE = "Asia/Kolkata"
 
 DISPLAY_NAME = ""           # dashboard heading + browser tab title; blank = plant name from Deye
-# Dashboard colours: "clean" (white + blue), "leaf" (soft green), "sunny"
+# Dashboard colours (default "sunny"): "clean" (white + blue), "leaf" (soft green), "sunny"
 # (warm cream + orange) are always light; "night" is dark. The dashboard also
 # has a Theme picker in the top-right corner to try them live.
-THEME = "clean"
+THEME = "sunny"
 
 # ---- String health -----------------------------------------------------------
 CHECK_STRINGS = True
@@ -1446,7 +1446,7 @@ th,td{text-align:right;padding:6px 8px;border-bottom:1px solid var(--line)}
 th:first-child,td:first-child{text-align:left}
 th{color:var(--muted);font-weight:700}
 .sw{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px}
-.panel{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:16px;box-shadow:var(--shadow)}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:16px;box-shadow:var(--shadow);margin-bottom:14px}
 .tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
 .tabs button{font:inherit;font-weight:700;border:1px solid var(--line);background:transparent;color:var(--ink);
   padding:7px 14px;border-radius:999px;cursor:pointer}
@@ -1473,7 +1473,7 @@ th{color:var(--muted);font-weight:700}
 .rangesum .v{font-size:1.25rem;font-weight:800}
 .chartbox{position:relative;height:320px}
 .caption{color:var(--muted);font-size:.9rem;margin-top:8px;min-height:1.2em}
-.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:14px}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:14px 0}
 .fact{display:flex;gap:10px;align-items:flex-start}
 .fact .e{font-size:1.4rem;line-height:1}
 .alertsbox{margin-bottom:14px}
@@ -1485,7 +1485,7 @@ th{color:var(--muted);font-weight:700}
 .alist details{margin-top:4px;font-size:.88rem}
 .alist summary{cursor:pointer;color:var(--muted);font-weight:700}
 .alist details p{margin:4px 0;color:var(--ink)}
-.update{margin-top:14px}
+.update{margin-bottom:14px}
 .update pre{white-space:pre-wrap;font:inherit;line-height:1.5;margin:8px 0 12px;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
 .ubtns{display:flex;flex-wrap:wrap;gap:8px}
 .ubtn{font:inherit;font-weight:800;font-size:.9rem;padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer;text-decoration:none}
@@ -1508,9 +1508,14 @@ footer{color:var(--muted);font-size:.8rem;margin-top:18px;text-align:center}
     <div class="note" id="todayNote"></div>
   </section>
 
-  <section class="card health" id="health" hidden></section>
-
-  <section class="card alertsbox" id="alertsCard" hidden></section>
+  <section class="card update" id="update" hidden>
+    <div class="k">Morning update for residents</div>
+    <pre id="updateText"></pre>
+    <div class="ubtns">
+      <a class="ubtn wa" id="waShare" target="_blank" rel="noopener">Share on WhatsApp</a>
+      <button class="ubtn" id="copyUpdate" type="button">Copy text</button>
+    </div>
+  </section>
 
   <section class="grid">
     <div class="card"><div class="k">This month</div><div class="v" id="month">–</div></div>
@@ -1549,14 +1554,9 @@ footer{color:var(--muted);font-size:.8rem;margin-top:18px;text-align:center}
 
   <section class="facts" id="facts"></section>
 
-  <section class="card update" id="update" hidden>
-    <div class="k">Morning update for residents</div>
-    <pre id="updateText"></pre>
-    <div class="ubtns">
-      <a class="ubtn wa" id="waShare" target="_blank" rel="noopener">Share on WhatsApp</a>
-      <button class="ubtn" id="copyUpdate" type="button">Copy text</button>
-    </div>
-  </section>
+  <section class="card health" id="health" hidden></section>
+
+  <section class="card alertsbox" id="alertsCard" hidden></section>
   <footer>1 unit = 1 kWh, the same “unit” on your electricity bill · Data from Deye Cloud</footer>
 </div>
 
