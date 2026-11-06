@@ -1,5 +1,6 @@
 name: Solar dashboard
 
+
 on:
   schedule:
     # Times are in UTC (IST = UTC + 5:30). Add, remove or change lines as you like.
