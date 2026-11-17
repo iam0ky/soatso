@@ -112,7 +112,10 @@ PARALLEL_STRINGS = {}
 # ~39 V for 600–630 W panels, ~37.5 V for 530–550 W, ~31 V for 330–400 W.
 PANEL_VOLTS_HOT = 37.5
 PANEL_WATTS = 0             # e.g. 620 — needed to estimate parallel strings, and cross-checks system size
-STRING_DAYS = 30            # days of per-string history to keep/show
+STRING_DAYS = 30            # days of per-input history shown on the dashboard
+KEEP_ALL_HISTORY = True     # keep every day's PV1/PV2 readings and every inverter alert (not just recent)
+ARCHIVE_FRAMES = True       # save each day's 5-minute readings to FRAMES_DIR/YYYY-MM-DD.csv
+MAX_BACKFILL_DAYS = 120     # at most this many old days are filled in per run (the rest next run)
 MIDDAY = (11, 14)           # hours used for comparisons (strongest, steadiest sun)
 
 # ---- Alerts (optional; leave blank to disable) ---------------------------------
@@ -150,9 +153,10 @@ MORNING_WINDOW = (6, 11)    # hours in which the daily update is sent (once per 
 
 HISTORY_CSV = "solar_history.csv"
 STRINGS_JSON = "strings_history.json"
+FRAMES_DIR = "frames"                     # one CSV of 5-minute readings per day
 ALERT_STATE = "alert_state.json"
 FORECAST_JSON = "forecast_log.json"      # forecast vs actual, to sharpen "expected units"
-ALERTS_JSON = "inverter_alerts.json"      # the inverter's own fault/warning log (last 90 days)
+ALERTS_JSON = "inverter_alerts.json"      # the inverter's own fault/warning log (all of it)
 ALERT_DAYS = 30                           # how far back the dashboard lists inverter alerts
 UPDATE_TXT = "resident_update.txt"        # the latest resident message, ready to copy
 OUTPUT_HTML = "solar_dashboard.html"
@@ -174,7 +178,7 @@ def _apply_env_overrides():
                  "HISTORY_CSV", "STRINGS_JSON", "ALERT_STATE", "OUTPUT_HTML", "DASHBOARD_PASSWORD",
                  "COMMUNITY_NAME", "UPDATE_TITLE", "DASHBOARD_URL", "RESIDENT_TELEGRAM_CHAT",
                  "FORECAST_JSON", "UPDATE_TXT",
-                 "ALERTS_JSON"):
+                 "ALERTS_JSON", "FRAMES_DIR"):
         if os.environ.get(name):
             g[name] = os.environ[name]
     for name in ("PANEL_VOLTS_HOT", "PANEL_WATTS"):
@@ -546,7 +550,7 @@ def discover_points(api, sn, dtype, all_pts, tz, today):
     return pts
 
 
-def collect_strings(api: Deye, sid, tz, today):
+def collect_strings(api: Deye, sid, tz, today, history_from=None):
     devs = [d for d in api.devices(sid)
             if "INVERTER" in str(d.get("deviceType", "")).upper() or not d.get("deviceType")]
     if not devs:
@@ -582,7 +586,13 @@ def collect_strings(api: Deye, sid, tz, today):
         tail = sn[-4:]
         plan.append((sn, dtype, pts, tail))
     days, bdays = store["days"], store["bdays"]
-    want = [today - timedelta(days=k) for k in range(STRING_DAYS)]
+    first = history_from if (KEEP_ALL_HISTORY and history_from) else today - timedelta(days=STRING_DAYS - 1)
+    want = [first + timedelta(days=k) for k in range((today - first).days + 1)]
+    missing = [d for d in want if d.isoformat() not in days]
+    if len(missing) > MAX_BACKFILL_DAYS:                  # spread a big backfill over several runs
+        skip = set(missing[:-MAX_BACKFILL_DAYS])
+        want = [d for d in want if d not in skip]
+        print(f"  PV readings: filling in {MAX_BACKFILL_DAYS} of {len(missing)} missing days this run")
     curve = {}
     fails = 0
     for day in sorted(want):
@@ -622,10 +632,15 @@ def collect_strings(api: Deye, sid, tz, today):
             curve = merged
         print(f"  strings {key}: {', '.join(sorted(merged))}")
     cutoff = (today - timedelta(days=STRING_DAYS)).isoformat()
-    store["days"] = {k: v for k, v in days.items() if k > cutoff}
-    store["bdays"] = {k: v for k, v in bdays.items() if k > cutoff}
+    if not KEEP_ALL_HISTORY:
+        days = {k: v for k, v in days.items() if k > cutoff}
+        bdays = {k: v for k, v in bdays.items() if k > cutoff}
+    store["days"], store["bdays"] = days, bdays
     save_json(Path(STRINGS_JSON), store)
-    return package_strings(store["days"], curve, today, datetime.now(tz), store["bdays"])
+    # the dashboard and health checks use the recent window; the file keeps everything
+    recent = {k: v for k, v in days.items() if k > cutoff}
+    recent_b = {k: v for k, v in bdays.items() if k > cutoff}
+    return package_strings(recent, curve, today, datetime.now(tz), recent_b)
 
 
 def natkey(s):
@@ -962,7 +977,12 @@ def collect_real():
     hist_path = Path(HISTORY_CSV)
     hist = load_history(hist_path)
 
-    if hist:
+    state = load_json(Path(ALERT_STATE), {})
+    want_from = parse_date_in(START_DATE).isoformat() if START_DATE else None
+    if hist and want_from and want_from < min(hist) and state.get("history_from") != want_from:
+        start = date.fromisoformat(want_from)        # START_DATE moved earlier: fill in the gap (once)
+        print(f"Backfilling from START_DATE {start.strftime('%d/%m/%Y')}")
+    elif hist:
         start = date.fromisoformat(max(hist)) - timedelta(days=REFRESH_LAST_DAYS - 1)
     elif START_DATE:
         start = parse_date_in(START_DATE)
@@ -996,10 +1016,26 @@ def collect_real():
         print(f"  fetched {cur} → {end_excl - timedelta(days=1)}")
         cur = end_excl
     save_history(hist_path, hist)
+    if want_from and state.get("history_from") != want_from:
+        state = load_json(Path(ALERT_STATE), {})
+        state["history_from"] = want_from            # remember, so it isn't fetched again every run
+        save_json(Path(ALERT_STATE), state)
+
+    first_day = date.fromisoformat(min(hist)) if hist else today
+    for d_, row in sorted(hist.items()):               # history starts at the first day with generation
+        if num(row.get("generation")) > 0:
+            first_day = date.fromisoformat(d_)
+            break
+    today_items = None
+    if ARCHIVE_FRAMES:
+        try:
+            today_items = archive_frames(api, sid, tz, first_day, today)
+        except Exception as e:
+            print(f"  5-minute archive unavailable ({e})")
 
     curve = []
     try:
-        for fr in api.frames(sid, today):
+        for fr in (today_items if today_items else api.frames(sid, today)):
             ts = parse_ts(fr.get("timeStamp"), tz)
             if ts and ts.date() == today:
                 curve.append([ts.strftime("%H:%M"), round(num(fr.get("generationPower")) / 1000, 2)])
@@ -1010,13 +1046,13 @@ def collect_real():
     strings = None
     if CHECK_STRINGS:
         try:
-            strings = collect_strings(api, sid, tz, today)
+            strings = collect_strings(api, sid, tz, today, history_from=first_day)
         except Exception as e:
             print(f"  string data unavailable ({e})")
 
     alerts = None
     try:
-        alerts = collect_alerts(api, sid, tz, datetime.now(tz))
+        alerts = collect_alerts(api, sid, tz, datetime.now(tz), history_from=first_day)
     except Exception as e:
         print(f"  inverter alerts unavailable ({e})")
     if strings and alerts:
@@ -1033,6 +1069,55 @@ def collect_real():
         "lat": num(st.get("locationLat")) or None,
         "lng": num(st.get("locationLng")) or None,
     }
+
+
+# ------------------------------------------------------------------ 5-minute archive
+FRAME_COLS = ["generationPower", "consumptionPower", "gridPower", "purchasePower", "wirePower",
+              "batteryPower", "chargePower", "dischargePower", "batterySOC"]
+
+
+def archive_frames(api, sid, tz, first, today):
+    """Save every day's 5-minute station readings (W) to FRAMES_DIR/YYYY-MM-DD.csv.
+    Old complete days are fetched once; today and yesterday are refreshed each run.
+    Returns today's raw frames so the 'Today' chart doesn't need another call."""
+    folder = Path(FRAMES_DIR)
+    folder.mkdir(parents=True, exist_ok=True)
+    days = [first + timedelta(days=k) for k in range((today - first).days + 1)]
+    todo = [d for d in days if d >= today - timedelta(days=1) or not (folder / f"{d.isoformat()}.csv").exists()]
+    old = [d for d in todo if d < today - timedelta(days=1)]
+    if len(old) > MAX_BACKFILL_DAYS:
+        skip = set(old[:-MAX_BACKFILL_DAYS])
+        todo = [d for d in todo if d not in skip]
+        print(f"  5-minute archive: filling in {MAX_BACKFILL_DAYS} of {len(old)} missing days this run")
+    today_frames, saved = [], 0
+    for d in todo:
+        try:
+            items = api.frames(sid, d)
+        except DeyeError as e:
+            print(f"  5-minute archive {d}: skipped ({e})")
+            continue
+        rows = []
+        for fr in items:
+            ts = parse_ts(fr.get("timeStamp"), tz)
+            if ts and ts.date() == d:
+                rows.append({"time": ts.strftime("%Y-%m-%d %H:%M:%S"),
+                             **{c: fr.get(c, "") if fr.get(c) is not None else "" for c in FRAME_COLS}})
+        if d == today:
+            today_frames = items
+        if not rows:
+            continue
+        cols = ["time"] + [c for c in FRAME_COLS if any(r[c] not in ("", None) for r in rows)]
+        rows.sort(key=lambda r: r["time"])
+        tmp = folder / f"{d.isoformat()}.tmp"
+        with tmp.open("w", newline="") as f:
+            w = csv.DictWriter(f, fieldnames=cols, extrasaction="ignore")
+            w.writeheader()
+            w.writerows(rows)
+        tmp.replace(folder / f"{d.isoformat()}.csv")
+        saved += 1
+    print(f"  5-minute archive: {saved} day file(s) written, "
+          f"{len(list(folder.glob('*.csv')))} days stored in {FRAMES_DIR}/")
+    return today_frames
 
 
 # ------------------------------------------------------------------ inverter alerts
@@ -1074,30 +1159,48 @@ def normalise_alert(a, tz):
     }
 
 
-def collect_alerts(api, sid, tz, now):
-    """Fetch the inverter's alert log; keep 90 days locally so short API windows still add up."""
+def _alerts_between(api, sid, start, end):
+    items = []
+    for page in range(1, 6):
+        batch = api.alerts(sid, start.timestamp(), end.timestamp(), page=page)
+        items += batch
+        if len(batch) < 50:
+            break
+    return items
+
+
+def collect_alerts(api, sid, tz, now, history_from=None):
+    """Fetch the inverter's alert log. The first time, walk back to history_from in
+    windows (30 days, or 7 if Deye refuses longer); after that only the recent window."""
     store = load_json(Path(ALERTS_JSON), {})
-    window = max(ALERT_DAYS, 3)
+    state = load_json(Path(ALERT_STATE), {})
+    oldest = now - timedelta(days=max(ALERT_DAYS, 3))
+    if KEEP_ALL_HISTORY and history_from and state.get("alerts_from") != history_from.isoformat():
+        oldest = min(oldest, datetime.combine(history_from, datetime.min.time(), now.tzinfo))
     items, err = [], None
-    for days in (window, 7):                       # fall back to a shorter window if refused
+    for span in (30, 7):                           # fall back to a shorter window if refused
         try:
-            start = now - timedelta(days=days)
-            for page in range(1, 6):
-                batch = api.alerts(sid, start.timestamp(), now.timestamp(), page=page)
-                items += batch
-                if len(batch) < 50:
-                    break
+            items, end = [], now
+            while end > oldest:
+                start = max(oldest, end - timedelta(days=span))
+                items += _alerts_between(api, sid, start, end)
+                end = start
             err = None
             break
         except DeyeError as e:
             err, items = e, []
     if err:
         print(f"  inverter alerts unavailable ({err})")
+    elif KEEP_ALL_HISTORY and history_from:
+        state = load_json(Path(ALERT_STATE), {})
+        state["alerts_from"] = history_from.isoformat()
+        save_json(Path(ALERT_STATE), state)
     for a in items:
         n = normalise_alert(a, tz)
         store[n["id"]] = n
-    cutoff = (now - timedelta(days=90)).strftime("%Y-%m-%d")
-    store = {k: v for k, v in store.items() if (v.get("start") or "9999") >= cutoff}
+    if not KEEP_ALL_HISTORY:
+        cutoff = (now - timedelta(days=90)).strftime("%Y-%m-%d")
+        store = {k: v for k, v in store.items() if (v.get("start") or "9999") >= cutoff}
     save_json(Path(ALERTS_JSON), store)
     shown_from = (now - timedelta(days=ALERT_DAYS)).strftime("%Y-%m-%d")
     out = sorted((v for v in store.values() if (v.get("start") or "") >= shown_from),
@@ -1620,11 +1723,19 @@ document.getElementById('updated').textContent = 'Updated ' + D.generated + (D.c
     }
   }
   const el = document.createElement('div'); el.className = 'sub nextrun';
-  const lateBy = prev ? (prev - D.generated_ts*1000) : 0;
-  if (lateBy > 75*60000){
+  // Overdue only if a scheduled run is due, this page is older than it, AND more than
+  // 90 minutes have passed since it was due (GitHub often starts scheduled runs late).
+  const missed = prev && D.generated_ts*1000 < prev && (nowMs - prev) > 90*60000;
+  if (missed){
     el.innerHTML = '⚠️ <b>Update overdue</b> — a scheduled refresh hasn’t arrived. Next one around ' + label + '.';
   } else {
-    el.textContent = '🔄 Next update around ' + label + ' (can be up to 30 min late)';
+    if (prev && D.generated_ts*1000 < prev){          // a run is due but hasn't arrived yet
+      const p = local(prev), ph = p.getUTCHours(), pm = p.getUTCMinutes();
+      el.textContent = '⏳ The ' + (((ph+11)%12+1) + ':' + String(pm).padStart(2,'0') + (ph < 12 ? ' AM' : ' PM')) +
+        ' update is on its way — GitHub often starts it 15–45 min late. Refresh in a little while.';
+    } else {
+      el.textContent = '🔄 Next update around ' + label + ' (can be up to 30 min late)';
+    }
   }
   document.getElementById('updated').after(el);
 })();
