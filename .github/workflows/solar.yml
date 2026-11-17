@@ -142,5 +142,13 @@ jobs:
             echo "Nothing changed."
           else
             git commit -m "Dashboard update $(TZ=Asia/Kolkata date '+%d %b %Y %H:%M IST')"
+            # if you edited the repo while this ran, catch up first, then push (3 tries)
+            for i in 1 2 3; do
+              git pull --rebase --quiet origin "${GITHUB_REF_NAME:-main}" && git push && exit 0
+              echo "Push attempt $i didn't go through, retrying…"; sleep 5
+            done
+            echo "::error::Couldn't publish the dashboard — see the messages above."; exit 1
+          fi
+            git commit -m "Dashboard update $(TZ=Asia/Kolkata date '+%d %b %Y %H:%M IST')"
             git push
           fi
