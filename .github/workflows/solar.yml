@@ -1,13 +1,15 @@
 name: Solar dashboard
 
-
 on:
+  # Runs are started on time by the Cloudflare Worker (see cloudflare-worker/).
+  # GitHub's own timer below is only a backup — it is often late or skipped.
+  # Once the Worker is working, you can delete the three cron lines.
   schedule:
-    # Times are in UTC (IST = UTC + 5:30). Add, remove or change lines as you like.
+    # Times are in UTC (IST = UTC + 5:30).
     - cron: "17 2 * * *"      # 02:17 UTC =  7:47 AM IST — morning start + resident update
     - cron: "17 8 * * *"      # 08:17 UTC =  1:47 PM IST — today so far
     - cron: "17 14 * * *"     # 14:17 UTC =  7:47 PM IST — full day + health check
-  workflow_dispatch:           # adds a "Run workflow" button for manual runs
+  workflow_dispatch:           # "Run workflow" button — also what the Cloudflare Worker presses
 
 permissions:
   contents: write              # lets the job commit the dashboard
@@ -39,6 +41,28 @@ jobs:
           key: solar-data-${{ github.run_id }}
           restore-keys: solar-data-
 
+      # Optional permanent backup in a PRIVATE repo (Variable DATA_REPO + Secret DATA_REPO_TOKEN).
+      # Fills in any file the cache doesn't have — e.g. if the cache was cleared.
+      - name: Restore from private data repo
+        if: ${{ vars.DATA_REPO != '' }}
+        continue-on-error: true
+        env:
+          TOKEN: ${{ secrets.DATA_REPO_TOKEN }}
+          REPO: ${{ vars.DATA_REPO }}
+        run: |
+          git clone --quiet --depth 1 "https://x-access-token:${TOKEN}@github.com/${REPO}.git" private-data
+          mkdir -p data
+          restored=0
+          if [ -d private-data/data ]; then
+            while IFS= read -r -d '' f; do
+              rel="${f#private-data/data/}"
+              if [ ! -e "data/$rel" ]; then
+                mkdir -p "data/$(dirname "$rel")"; cp "$f" "data/$rel"; restored=$((restored+1))
+              fi
+            done < <(find private-data/data -type f -print0)
+          fi
+          echo "Files restored from the private repo: $restored (the rest came from the cache)"
+
       - name: Fetch data and build dashboard
         env:
           # Secrets (Settings → Secrets and variables → Actions → Secrets)
@@ -53,6 +77,7 @@ jobs:
           FAST2SMS_NUMBERS: ${{ secrets.FAST2SMS_NUMBERS }}
           # Optional plain settings (Settings → Secrets and variables → Actions → Variables)
           BASE_URL: ${{ vars.BASE_URL }}
+          START_DATE: ${{ vars.START_DATE }}     # DD/MM/YYYY, optional
           DISPLAY_NAME: ${{ vars.DISPLAY_NAME }}
           THEME: ${{ vars.THEME }}
           STRING_PANELS: ${{ vars.STRING_PANELS }}
@@ -65,9 +90,10 @@ jobs:
           STRINGS_JSON: data/strings_history.json
           ALERT_STATE: data/alert_state.json
           OUTPUT_HTML: docs/index.html
-          RUN_TIMES: "07:47,13:47,19:47"   # keep in step with the cron lines above (IST)
+          RUN_TIMES: "07:47,13:47,19:47"   # keep in step with the Worker / cron times (IST)
           # Morning update for residents (sent once, by the 8 AM run)
           COMMUNITY_NAME: ${{ vars.COMMUNITY_NAME }}
+          UPDATE_TITLE: ${{ vars.UPDATE_TITLE }}
           DASHBOARD_URL: ${{ vars.DASHBOARD_URL }}
           RESIDENT_TELEGRAM_CHAT: ${{ vars.RESIDENT_TELEGRAM_CHAT }}
           WEATHER_PLACE: ${{ vars.WEATHER_PLACE }}
@@ -76,6 +102,7 @@ jobs:
           FORECAST_JSON: data/forecast_log.json
           UPDATE_TXT: data/resident_update.txt
           ALERTS_JSON: data/inverter_alerts.json
+          FRAMES_DIR: data/frames
         run: python solar_chart.py --no-open
 
       - name: Save private history
@@ -84,6 +111,27 @@ jobs:
         with:
           path: data
           key: solar-data-${{ github.run_id }}
+
+      - name: Back up data to private repo
+        if: ${{ success() && vars.DATA_REPO != '' }}
+        env:
+          TOKEN: ${{ secrets.DATA_REPO_TOKEN }}
+          REPO: ${{ vars.DATA_REPO }}
+        run: |
+          [ -d private-data/.git ] || git clone --quiet --depth 1 "https://x-access-token:${TOKEN}@github.com/${REPO}.git" private-data
+          mkdir -p private-data/data
+          cp -r data/. private-data/data/
+          cd private-data
+          git config user.name  "solar-bot"
+          git config user.email "solar-bot@users.noreply.github.com"
+          git add data
+          if git diff --cached --quiet; then
+            echo "No changes to back up."
+          else
+            git commit --quiet -m "Backup $(TZ=Asia/Kolkata date '+%d %b %Y %H:%M IST')"
+            git push --quiet
+            echo "Backed up to the private repo."
+          fi
 
       - name: Publish dashboard
         run: |
