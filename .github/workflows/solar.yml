@@ -3,15 +3,18 @@ name: Solar dashboard
 run-name: "Solar dashboard · ${{ github.event_name == 'schedule' && 'GitHub schedule' || inputs.source || 'manual' }}"
 
 on:
-  # Runs are started on time by the Cloudflare Worker (see cloudflare-worker/).
-  # GitHub's own timer below is only a backup — it is often late or skipped.
-  # Once the Worker is working, you can delete the three cron lines.
+  # GitHub's timer can run late or skip a run when it's busy, so each main run has a
+  # backup 30 minutes later. Extra runs are harmless: they just refresh the dashboard;
+  # the morning message is sent once a day and alerts only when something changes.
   schedule:
-    # Times are in UTC (IST = UTC + 5:30).
+    # Times are in UTC (IST = UTC + 5:30). Odd minutes avoid GitHub's busiest times.
     - cron: "17 2 * * *"      # 02:17 UTC =  7:47 AM IST — morning start + resident update
+    - cron: "47 2 * * *"      # 02:47 UTC =  8:17 AM IST — backup
     - cron: "17 8 * * *"      # 08:17 UTC =  1:47 PM IST — today so far
+    - cron: "47 8 * * *"      # 08:47 UTC =  2:17 PM IST — backup
     - cron: "17 14 * * *"     # 14:17 UTC =  7:47 PM IST — full day + health check
-  workflow_dispatch:           # "Run workflow" button — also what the Cloudflare Worker presses
+    - cron: "47 14 * * *"     # 14:47 UTC =  8:17 PM IST — backup
+  workflow_dispatch:           # "Run workflow" button
     inputs:
       source:
         description: "Who started this run"
