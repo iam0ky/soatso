@@ -1,4 +1,6 @@
 name: Solar dashboard
+# Label each run in the Actions list by what started it
+run-name: "Solar dashboard · ${{ github.event_name == 'schedule' && 'GitHub schedule' || inputs.source || 'manual' }}"
 
 on:
   # Runs are started on time by the Cloudflare Worker (see cloudflare-worker/).
@@ -10,6 +12,12 @@ on:
     - cron: "17 8 * * *"      # 08:17 UTC =  1:47 PM IST — today so far
     - cron: "17 14 * * *"     # 14:17 UTC =  7:47 PM IST — full day + health check
   workflow_dispatch:           # "Run workflow" button — also what the Cloudflare Worker presses
+    inputs:
+      source:
+        description: "Who started this run"
+        required: false
+        default: "manual"
+        type: string
 
 permissions:
   contents: write              # lets the job commit the dashboard
@@ -124,7 +132,7 @@ jobs:
           cd private-data
           git config user.name  "solar-bot"
           git config user.email "solar-bot@users.noreply.github.com"
-          git add data
+          git add -f data            # -f: back up even if that repo has a .gitignore
           if git diff --cached --quiet; then
             echo "No changes to back up."
           else
@@ -148,7 +156,4 @@ jobs:
               echo "Push attempt $i didn't go through, retrying…"; sleep 5
             done
             echo "::error::Couldn't publish the dashboard — see the messages above."; exit 1
-          fi
-            git commit -m "Dashboard update $(TZ=Asia/Kolkata date '+%d %b %Y %H:%M IST')"
-            git push
           fi
